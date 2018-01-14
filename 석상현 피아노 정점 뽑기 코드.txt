@@ -1,0 +1,52 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System.IO;
+
+public class Basic_BAndit : MonoBehaviour {
+
+    //File
+    FileStream textFile;
+    string path = @"Assets\PianoText.txt";
+
+    //vertex
+    public MeshFilter m_mesh;
+    Vector3[] m_vec;
+    float[] tvec;
+
+
+    // Use this for initialization
+    void Start () {
+        m_mesh = GetComponent<MeshFilter>();
+        tvec = new float[3];
+
+        m_vec = m_mesh.mesh.vertices;
+
+        int temp = m_mesh.mesh.vertexCount;
+
+
+        //
+        textFile = new FileStream(path, FileMode.CreateNew);
+        //StreamReader sr = new StreamReader(textFile);
+        StreamWriter sr = new StreamWriter(textFile);
+
+        for (int i = 0; i < temp; ++i)
+        {
+            tvec[0] = m_vec[i].x;
+            tvec[1] = m_vec[i].y;
+            tvec[2] = m_vec[i].z;
+
+            sr.Write(tvec[0]);
+            sr.Write(tvec[1]);
+            sr.Write(tvec[2]);
+            sr.WriteLine();
+        }
+
+        sr.Close();
+        textFile.Close();
+    }
+
+   // Update is called once per frame
+   void Update () {
+    }
+}
