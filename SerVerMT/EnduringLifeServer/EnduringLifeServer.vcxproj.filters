@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{9a5da600-da53-4e43-8893-bbc57fe94b8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header">
+      <UniqueIdentifier>{e37f599d-b56c-4b3e-ad66-8f69b10a6d19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Main">
+      <UniqueIdentifier>{28b7539f-3ce3-4229-9489-39845e764485}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cServer">
+      <UniqueIdentifier>{982db6c9-ecdc-40ef-8aae-070ec6f728e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cThreadFunc">
+      <UniqueIdentifier>{9ff3326a-cb61-4d55-abdd-8fd88813713f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cMyNamespace">
+      <UniqueIdentifier>{67c0098f-7c0f-4247-9a88-92bb8c86b08a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cObject">
+      <UniqueIdentifier>{f7c427e4-5f6d-4bef-93ec-a5bd7c0d2f01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dump">
+      <UniqueIdentifier>{70aebdc4-3472-4949-b7d8-c54a47414dd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cObject\cPlayer">
+      <UniqueIdentifier>{ece65f74-7c43-466f-8d8d-f2b91a83ca5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cZone">
+      <UniqueIdentifier>{d4fe33c3-8ce8-40af-9375-7decf4242c2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cSector">
+      <UniqueIdentifier>{ae819210-db89-4828-a7c9-66678b349c69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cObject\cMonster">
+      <UniqueIdentifier>{3a8baed8-50da-4ea1-a887-a327957a8df6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\cScene">
+      <UniqueIdentifier>{4244c180-3be0-4d42-8cb6-f95620f795d2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Overlapped_Ex.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="cMyNamespace.h">
+      <Filter>Source\cMyNamespace</Filter>
+    </ClInclude>
+    <ClInclude Include="cObject.h">
+      <Filter>Source\cObject</Filter>
+    </ClInclude>
+    <ClInclude Include="cThreadFunc.h">
+      <Filter>Source\cThreadFunc</Filter>
+    </ClInclude>
+    <ClInclude Include="cServer.h">
+      <Filter>Source\cServer</Filter>
+    </ClInclude>
+    <ClInclude Include="Dump.h">
+      <Filter>Dump</Filter>
+    </ClInclude>
+    <ClInclude Include="cPlayer.h">
+      <Filter>Source\cObject\cPlayer</Filter>
+    </ClInclude>
+    <ClInclude Include="cZone.h">
+      <Filter>Source\cZone</Filter>
+    </ClInclude>
+    <ClInclude Include="cSector.h">
+      <Filter>Source\cSector</Filter>
+    </ClInclude>
+    <ClInclude Include="MyHeader.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="cMonster.h">
+      <Filter>Source\cObject\cMonster</Filter>
+    </ClInclude>
+    <ClInclude Include="cScene.h">
+      <Filter>Source\cScene</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EnduringLifeServer.cpp">
+      <Filter>Source\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="cMyNamespace.cpp">
+      <Filter>Source\cMyNamespace</Filter>
+    </ClCompile>
+    <ClCompile Include="cThreadFunc.cpp">
+      <Filter>Source\cThreadFunc</Filter>
+    </ClCompile>
+    <ClCompile Include="cServer.cpp">
+      <Filter>Source\cServer</Filter>
+    </ClCompile>
+    <ClCompile Include="Dump.cpp">
+      <Filter>Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="cObject.cpp">
+      <Filter>Source\cObject</Filter>
+    </ClCompile>
+    <ClCompile Include="cPlayer.cpp">
+      <Filter>Source\cObject\cPlayer</Filter>
+    </ClCompile>
+    <ClCompile Include="cZone.cpp">
+      <Filter>Source\cZone</Filter>
+    </ClCompile>
+    <ClCompile Include="cSector.cpp">
+      <Filter>Source\cSector</Filter>
+    </ClCompile>
+    <ClCompile Include="cMonster.cpp">
+      <Filter>Source\cObject\cMonster</Filter>
+    </ClCompile>
+    <ClCompile Include="cScene.cpp">
+      <Filter>Source\cScene</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
