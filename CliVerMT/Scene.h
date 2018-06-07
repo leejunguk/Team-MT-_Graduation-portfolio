@@ -55,8 +55,7 @@ public:
 	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
-	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, CPlayer *m_pPlayer);
-	void ReBuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
+	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
 	void ReleaseObjects();
 
 	void BuildLightsAndMaterials();
@@ -77,8 +76,7 @@ public:
     void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera=NULL);
 	//내가 오버라이딩 한 함수,
 	void ReleaseUploadBuffers();
-
-	CPlayer						*m_pPlayer = NULL;
+	
 	CHeightMapTerrain			*m_pTerrain = NULL;
 	CHeightMapTerrain *GetTerrain() { return(m_pTerrain); }
 
@@ -113,6 +111,5 @@ protected:
 	CObjectsShader				*m_pObjectShader = NULL;
 	TmpShader				*m_pTmpShader = NULL;
 	CTreeShader	            *m_pTreeShader = NULL;
-	//BulletShader              * m_BulletShader[100];
 
 };

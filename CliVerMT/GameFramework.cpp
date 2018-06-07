@@ -676,8 +676,8 @@ void CGameFramework::BuildObjects()
 
 	//m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_pPlayer);
 	
-	m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_pPlayer);
-	m_pScene->m_pPlayer = m_pPlayer = new CAirplanePlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->GetTerrain(), 1);
+	m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
+	m_pPlayer = new CAirplanePlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->GetTerrain(), 1);
 	m_fireball = new CFireBall(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->GetTerrain(), 1);
 
 	m_pCamera = m_pPlayer->GetCamera();
@@ -1258,7 +1258,6 @@ void CGameFramework::ProcessPacket(char * ptr)
 			//
 			//m_pCurrScene = m_pFieldScene;
 			//m_pPlayer = m_FieldPlayer;
-			m_pScene->m_pPlayer = m_pPlayer;
 			//m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pScene->GetTerrain()->GetHeight(512.f, 950.f), 900.0f));
 		
 			for (int i = 0; i < MAX_USER; ++i)
@@ -1272,7 +1271,6 @@ void CGameFramework::ProcessPacket(char * ptr)
 			m_pPlayer->SetScene(TOWN);
 			//m_pCurrScene = m_pTownScene;
 			//m_pPlayer = m_TownPlayer;
-			m_pScene->m_pPlayer = m_pPlayer;
 			//m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pScene->GetTerrain()->GetHeight(512.f, 100.f), 100.0f));
 			
 			for (int i = 0; i < MAX_USER; ++i)

@@ -112,7 +112,7 @@ void CScene::SetMaterial(int nIndex, MATERIAL *pMaterial)
 	m_pMaterials->m_pReflections[nIndex] = *pMaterial;
 }
 
-void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, CPlayer *m_pPlayer)
+void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
@@ -138,22 +138,9 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_pTerrain->SetPosition(0, 0, 0);
 #endif
 
+
+
 #ifdef _WITH_GUNSHIP_MODEL
-	//m_ppObjects[0] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);       //Terrian 때매 y 300 +  x +50
-	//m_ppObjects[0]->SetPosition(XMFLOAT3(350.f, 400, 350.0+ 1200.f));
-	//m_ppObjects[0]->Rotate(-90.f,0.0f,0.0f);
-	//m_ppObjects[1] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[1]->SetPosition(XMFLOAT3(380.0f + 500.f, 400, 380.0f + 1200.f));
-	//m_ppObjects[1]->Rotate(-90.f, 0.0f, 0.0f);
-	//m_ppObjects[2] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[2]->SetPosition(XMFLOAT3(420.0f + 500.f, 400, 420.0f + 1200.f));
-	//m_ppObjects[2]->Rotate(-90.f, 0.0f, 0.0f);
-	//m_ppObjects[3] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[3]->SetPosition(XMFLOAT3(470.0f + 500.f, 400, 470.0f + 1200.f));
-	//m_ppObjects[3]->Rotate(-90.f, 0.0f, 0.0f);
-	//m_ppObjects[4] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[4]->SetPosition(XMFLOAT3(530.0f + 500.f, 400, 530.0f + 1200.f));
-	//m_ppObjects[4]->Rotate(-90.f, 0.0f, 0.0f);
 	int Terrianwidth = m_pTerrain->GetWidth();
 	int Terrianlength = m_pTerrain->GetLength();
 
@@ -167,10 +154,6 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 		m_ppObjects[i]->SetPosition(XMFLOAT3(x, m_pTerrain->GetHeight(x,y), y));
 		m_ppObjects[i]->Rotate(-90.f, 0.0f, 0.0f);
 	}
-
-	//m_ppObjects[5] = new CApacheHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[5]->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	//m_ppObjects[5]->Rotate(0.0f, 90.0f, 0.0f);
 #endif
 	m_ppObjects[m_nObjects-1] = new CDinosour(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature); //용용이 
 	m_ppObjects[m_nObjects-1]->SetPosition(XMFLOAT3(2050.f, m_pTerrain->GetHeight(1700.f, 1900.f) + 120.f, 1850.f));
@@ -188,26 +171,6 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	pTree->BuildObjects(pd3dDevice, pd3dCommandList, m_pTerrain);
 
 	m_pTreeShader = pTree;
-	/*TmpShader *pTmpShader = new TmpShader();
-	pTmpShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	pTmpShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pPlayer);
-
-	m_pTmpShader = pTmpShader;*/
-
-	//if() 총알 트루이고 , 플레이어 포인토 받아와 서 만듬 
-	/*if (isRenderBullet == true)
-	{
-	BulletShader *pBulletShader = new BulletShader();
-	BulletCnt++;
-	pBulletShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	pBulletShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pPlayer);
-	m_BulletShader[BulletCnt] = pBulletShader;
-	isRenderBullet = false;
-	}
-
-	*/
-
-
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 
 
@@ -218,22 +181,7 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
-void CScene::ReBuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
-{
 
-	////if() 총알 트루이고 , 플레이어 포인토 받아와 서 만듬 
-	//if (isRenderBullet == true)
-	//{
-	//	BulletShader *pBulletShader = new BulletShader();
-	//	BulletCnt++;
-	//	pBulletShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	//	pBulletShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pPlayer);
-	//	m_BulletShader[BulletCnt] = pBulletShader;
-	//	isRenderBullet = false;
-	//}
-
-
-}
 
 void CScene::ReleaseObjects()
 {
@@ -514,12 +462,6 @@ void CScene::AnimateObjects(float fTimeElapsed)
 
 	for (int i = 0; i < m_nObjects-1; i++) m_ppObjects[i]->Animate(fTimeElapsed);
 	m_ppObjects[m_nObjects - 1]->GetMesh()->FBXFrameAdvance(fTimeElapsed); // 공룡 
-
-	if (m_pLights)
-	{
-		m_pLights->m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
-		m_pLights->m_pLights[1].m_xmf3Direction = m_pPlayer->GetLookVector();
-	}
 }
 //따라 보기 추가
 void CScene::AnimateObjects(float fTimeElapsed, CCamera *pCCamera)
@@ -530,11 +472,11 @@ void CScene::AnimateObjects(float fTimeElapsed, CCamera *pCCamera)
 
 	m_pObjectShader->AnimateObjects(fTimeElapsed, pCCamera);
 	m_pTreeShader->AnimateObjects(fTimeElapsed, pCCamera);
-	if (m_pLights)
+	/*if (m_pLights)
 	{
 		m_pLights->m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
 		m_pLights->m_pLights[1].m_xmf3Direction = m_pPlayer->GetLookVector();
-	}
+	}*/
 
 }
 
