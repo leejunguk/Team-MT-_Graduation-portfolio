@@ -93,6 +93,8 @@ protected:
 	CGameObject					**m_ppObjects = NULL;
 	int							m_nObjects = 0;
 
+	CGameObject					*m_ppCastles = NULL;
+
 	CShader						**m_ppShaders = NULL;
 	int							m_nShaders = 0;
 

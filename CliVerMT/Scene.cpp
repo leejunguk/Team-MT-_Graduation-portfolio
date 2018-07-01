@@ -160,6 +160,10 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_ppObjects[m_nObjects - 1]->Rotate(0.0f, -90.0f, 0.0f);
 
 	
+	m_ppCastles = new CStaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_ppCastles->SetPosition(2000.0f, 0.0f, 2000.0f);
+
+
 	//예전에 있던 오브젝트 쉐이더를 이용해서 해보기.를 위해서는 Terrain 먼저 받아야 됨.
 	CObjectsShader *pObjectShader = new CObjectsShader();
 	pObjectShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
@@ -172,7 +176,6 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 
 	m_pTreeShader = pTree;
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-
 
 
 	m_pObjectShader = pObjectShader;
@@ -507,6 +510,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
 	for (int i = 0; i < m_nObjects; i++) m_ppObjects[i]->UpdateTransform(NULL);
 	for (int i = 0; i < m_nObjects; i++) m_ppObjects[i]->Render(pd3dCommandList, pCamera);
+	m_ppCastles->Render(pd3dCommandList, pCamera);
 
 
 
