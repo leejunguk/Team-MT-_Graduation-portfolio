@@ -3,6 +3,7 @@
 
 #include "cPlayer.h"
 #include "cMonster.h"
+#include "CEffect.h"
 
 #include "cThreadFunc.h"
 #include "cMyNamespace.h"
@@ -44,11 +45,21 @@ void cServer::Initialize()
 			objects[i] = new cMonster();
 			objects[i]->SetID(i);
 			objects[i]->SetX(2550);
-			objects[i]->SetZ(2550);
+			objects[i]->SetZ(1500);
 			objects[i]->SetIsUse(true);
-			objects[i]->SetScene(STAGE_ONE);
+			if( i == 3)
+				objects[i]->SetScene(STAGE_ONE);
+			else if (i == 4)
+				objects[i]->SetScene(STAGE_TWO);
+			else  if (i == 5)
+				objects[i]->SetScene(STAGE_THREE);
 			g_scene.UpdateZone(i);
 		}
+	}
+	for (int i = MAX_OBJECT_INDEX; i < MAX_EFFECT_INDEX; ++i)
+	{
+		objects[i] = new cEffect();
+		objects[i]->SetID(i);
 	}
 
 	a_thread = thread{ AcceptThread };

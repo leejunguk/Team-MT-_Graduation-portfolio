@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "cThreadFunc.h"
 #include "MonsterAI.h"
 #include "cObject.h"
 #include "cMonster.h"
@@ -13,26 +14,20 @@ Ideal * Ideal::Instance()
 
 void Ideal::Enter(cObject* object)
 {
-	ideal_time = GetCurTime();
+	ideal_time = 0;
 }
 
 
-void Ideal::Excute(cObject* object,  float *temp_x, float *temp_z)
+void Ideal::Excute(cObject* object)
 {
-	/*Add_idealTime();
-	if (ideal_time >= 5000) {
-		object->ChangeState(Move::Instance());
-		ideal_time = 0;
-		return;
+	int temp = rand() % 3;
+	if (object->CanSee(object->GetID(), obj_target->GetID())) {
+		if(temp)
+			object->ChangeState(Rush::Instance());
+		else
+			object->ChangeState(Move::Instance());
 	}
-
-	if (object->Can_see(1, 20)) {
-		object->ChangeState(Move::Instance());
-		std::cout << "시야 내 : -> move \n";
-	}
-	else {
-		std::cout << "시야 외 : ideal \n";
-	}*/
+	FSM_st = high_resolution_clock::now();
 }
 
 
@@ -40,12 +35,11 @@ void Ideal::Exit(cObject* cObject)
 {
 }
 
-//
-//
-void Ideal::Add_idealTime()
+void Ideal::Initialize(cObject * target)
 {
-	ideal_time = GetCurTime() + ideal_time;
+	obj_target = target;
 }
+
 
 /*==================================================*/
 
@@ -64,18 +58,38 @@ void Attack::Enter(cObject* object)
 }
 
 
-void Attack::Excute(cObject* object, float *temp_x, float *temp_z)
+void Attack::Excute(cObject*object)
 {
 	Add_time(&attack_time);
-	if (attack_time > 500) {
-		attack_time = 0.f;
-		object->ChangeState(Move::Instance());
+	if (attack_time > 1) {
+		//WORD temp = rand() % 2;
+		WORD temp = 1;
+		if (temp) {
+			if (object->CanAttack(object->GetID(), obj_target->GetID())) {
+				object->ChangeState(Attack::Instance());
+				obj_target->Damaged(5);
+				attack_time = 0.f;
+			}
+			else {
+				object->ChangeState(Move::Instance());
+				attack_time = 0.f;
+			}
+		}
+		/*else {
+			object->ChangeState(Wander::Instance());
+		}*/
 	}
+	FSM_st = high_resolution_clock::now();
 }
 
 
 void Attack::Exit(cObject* cObject)
 {
+}
+
+void Attack::Initialize(cObject * target)
+{
+	obj_target = target;
 }
 
 /*==================================================*/
@@ -91,16 +105,42 @@ BeAttack * BeAttack::Instance()
 
 void BeAttack::Enter(cObject* object)
 {
+	hit_time = 0.f;
+	m_bStiff = true;
 }
 
 
-void BeAttack::Excute(cObject* object, float *temp_x, float *temp_z)
+void BeAttack::Excute(cObject*object)
 {
+	Add_time(&m_fStiffTime);
+	if (m_fStiffTime >= 2)
+		m_bStiff = false;
+
+	if (m_bStiff == false) {
+		Add_time(&hit_time);
+		object->moveMutex.lock();
+		object->Damaged(5);
+		object->moveMutex.unlock();
+
+		if (object->GetMyHP() <= 0) {
+			object->SetX(8000.f);
+			object->SetZ(8000.f);
+			object->SetIsUse(false);
+		}
+		object->ChangeState(Move::Instance());
+		m_fStiffTime = 0.f;
+	}
+	FSM_st = high_resolution_clock::now();
 }
 
 
 void BeAttack::Exit(cObject* cObject)
 {
+}
+
+void BeAttack::StiffTime()
+{
+	m_bStiff = true;
 }
 
 /*==================================================*/
@@ -121,15 +161,16 @@ void Move::Enter(cObject* object)
 }
 
 
-void Move::Excute(cObject* object, float *temp_x, float *temp_z)
+void Move::Excute(cObject*object)
 {
-	object->Move(temp_x, temp_z, MONSTER_SPEED);
+	object->Move(MONSTER_SPEED*GetElapsedTime());
 	Add_time(&move_time);
 
-	if (move_time > 500) {
-		move_time = 0.f;
+	if (object->CanAttack(object->GetID(), obj_target->GetID())) {
 		object->ChangeState(Attack::Instance());
+		move_time = 0.f;
 	}
+	FSM_st = high_resolution_clock::now();
 }
 
 
@@ -155,22 +196,44 @@ Rush * Rush::Instance()
 void Rush::Enter(cObject* object)
 {
 	rush_time = 0.f;
+	my_x = object->GetX();
+	my_z = object->GetZ();
 }
 
-void Rush::Excute(cObject* object, float *temp_x, float *temp_z)
+void Rush::Excute(cObject*object)
 {
 	Add_time(&rush_time);
-	object->Move(temp_x, temp_z, MONSTER_SPEED*2);
-	if (rush_time>100) {
+	object->Move(1.5*MONSTER_SPEED*GetElapsedTime());
+
+	//*temp_x += target_x;
+	//*temp_z += target_x;
+	//object->Move(temp_x, temp_z, MONSTER_SPEED * 10);
+	if (object->CanAttack(object->GetID(), obj_target->GetID())){
 		rush_time = 0.f;
-		object->ChangeState(Move::Instance());
+		object->ChangeState(Attack::Instance());
 	}
+	FSM_st = high_resolution_clock::now();
 }
 
 
 void Rush::Exit(cObject* object)
 {
 }
+void Rush::Initialize(cObject * target)
+{
+	obj_target = target;
+	float temp_x = 0, temp_z = 0;
+
+	temp_x = target->GetX()+my_x;
+	temp_z = target->GetZ()+my_z;
+
+	temp_x = (float)my_x / (float)sqrt(temp_x*temp_x);
+	temp_z = (float)my_z / (float)sqrt(temp_z*temp_z);
+
+	target_x = roundf((temp_x) * 100.f) * 0.01f;
+	target_z = roundf((temp_z) * 100.f) * 0.01f;
+}
+
 /*==================================================*/
 
 
@@ -191,19 +254,22 @@ void Wander::Enter(cObject* object)
 }
 
 
-void Wander::Excute(cObject* object, float *temp_x, float *temp_z)
+void Wander::Excute(cObject*object)
 {
 	Add_time(&t_wander);
-	radian += (0.1f*GetCurTime()*0.000001);
+	radian += (0.1f * GetElapsedTime());
 
-	*temp_x = mid_x + cur_x*cos(radian*3.141592);
-	*temp_z = mid_z + cur_z*sin(radian*3.141592);
-	object->Move(temp_x, temp_z, MONSTER_SPEED/2);
-
-	if (t_wander>100) {
+	if (t_wander>1000) {
 		t_wander = 0.f;
-		object->ChangeState(Move::Instance());
+		WORD temp = rand() % 2;
+		if (temp == 0) {
+			object->ChangeState(Move::Instance());
+		}
+		else if (temp == 1) {
+			object->ChangeState(Rush::Instance());
+		}
 	}
+	FSM_st = high_resolution_clock::now();
 }
 
 
@@ -219,10 +285,5 @@ void Wander::Initialize(cObject *player)
 	//radian = atan2(cur_x-mid_x, cur_z - mid_z);
 	radian = atan2(cur_z - mid_z, cur_x - mid_x);
 }
-
-void Wander::Round()
-{
-}
-
 /*==================================================*/
 

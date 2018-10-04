@@ -26,14 +26,16 @@ using namespace chrono;
 						공격범위
 						공격 viewlist
 */
+static high_resolution_clock::time_point FSM_st = high_resolution_clock::now();
+static high_resolution_clock::time_point g_tElapsed = high_resolution_clock::now();
+
 class cObject;
 
 /*==================================================*/
 class BaseState {
-
 public:
 	virtual void Enter(cObject*) = 0;
-	virtual void Excute(cObject* object, float *temp_x, float *temp_z) = 0;
+	virtual void Excute(cObject*object) = 0;
 	virtual void Exit(cObject*) = 0;
 	virtual void Initialize(cObject* target) = 0;
 };
@@ -42,14 +44,15 @@ public:
 class Ideal : public BaseState {
 private:
 	unsigned int ideal_time;
+	cObject * obj_target;
 
 public:
 	static Ideal* Instance();
 
 	virtual void Enter(cObject*);
-	virtual void Excute(cObject* object, float *temp_x, float *temp_z);
+	virtual void Excute(cObject*object);
 	virtual void Exit(cObject*);
-	virtual void Initialize(cObject* target) {}
+	virtual void Initialize(cObject* target);
 public:
 	void Add_idealTime();
 };
@@ -58,27 +61,34 @@ public:
 /*==================================================*/
 class Attack : public BaseState {
 	float attack_time = 0.f;
+	cObject * obj_target;
 public:
 
 	static Attack* Instance();
 
 	virtual void Enter(cObject*);
-	virtual void Excute(cObject* object, float *temp_x, float *temp_z);
+	virtual void Excute(cObject*object);
 	virtual void Exit(cObject*);
-	virtual void Initialize(cObject* target) {}
+	virtual void Initialize(cObject* target);
 };
 
 /*==================================================*/
 class BeAttack : public BaseState {
+	
+	float hit_time = 0.f;
 
+	float m_fStiffTime = 0.f;
+	bool m_bStiff = false;
 public:
 
 	static BeAttack* Instance();
 
 	virtual void Enter(cObject*);
-	virtual void Excute(cObject* object, float *temp_x, float *temp_z);
+	virtual void Excute(cObject*object);
 	virtual void Exit(cObject*);
 	virtual void Initialize(cObject* target) {}
+
+	void StiffTime();
 };
 
 
@@ -91,7 +101,7 @@ public:
 	static Move* Instance();
 
 	virtual void Enter(cObject*);
-	virtual void Excute(cObject* object, float *temp_x, float *temp_z);
+	virtual void Excute(cObject*object);
 	virtual void Exit(cObject*);
 
 public:
@@ -100,15 +110,19 @@ public:
 
 /*==================================================*/
 class Rush : public BaseState {
+	cObject* obj_target;
 	float rush_time = 0.f;
+
+	float my_x = 0, my_z = 0;
+	float target_x = 0, target_z = 0;
 public:
 
 	static Rush* Instance();
 
 	virtual void Enter(cObject*);
-	virtual void Excute(cObject* object, float *temp_x, float *temp_z);
+	virtual void Excute(cObject*object);
 	virtual void Exit(cObject*);
-	virtual void Initialize(cObject* target) {}
+	virtual void Initialize(cObject* target);
 };
 
 
@@ -125,7 +139,7 @@ public:
 	static Wander* Instance();
 
 	virtual void Enter(cObject*);
-	virtual void Excute(cObject* object, float *temp_x, float *temp_z);
+	virtual void Excute(cObject*object);
 	virtual void Exit(cObject*);
 
 	virtual void Initialize(cObject*);
@@ -134,15 +148,15 @@ public:
 
 /*===========================================================*/
 /*===========================================================*/
-static UINT GetCurTime()
+static double GetElapsedTime()
 {
-	static auto start = high_resolution_clock::now();
+	g_tElapsed = high_resolution_clock::now();
 
-	return duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+	return (double)((duration_cast<milliseconds>(g_tElapsed - FSM_st)).count()*0.001f);
 }
 
 static void Add_time(float *time) {
-	(*time) = ((GetCurTime()*0.00001f) + (*time));
+	(*time) = (GetElapsedTime() + (*time));
 }
 
 

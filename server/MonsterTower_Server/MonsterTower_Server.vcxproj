@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CEffect.h" />
     <ClInclude Include="cMonster.h" />
     <ClInclude Include="cMyNamespace.h" />
     <ClInclude Include="cPlayer.h" />
@@ -165,6 +166,7 @@
     <ClInclude Include="cObject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CEffect.cpp" />
     <ClCompile Include="cMonster.cpp" />
     <ClCompile Include="cMyNamespace.cpp" />
     <ClCompile Include="cObject.cpp" />

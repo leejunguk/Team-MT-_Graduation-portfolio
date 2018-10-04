@@ -93,6 +93,7 @@ void WorkerThread()
 
 		BOOL is_success = GetQueuedCompletionStatus(g_iocp, &data_size, &key, reinterpret_cast<LPWSAOVERLAPPED *>(&p_over), INFINITE);
 
+
 		//cout << key << endl;
 		//WorkerThread 종료
 		if (thread_running == false)
@@ -102,23 +103,20 @@ void WorkerThread()
 			cout << "Error in GQCS key[" << key << "]\n";
 		}
 		// 접속종료 처리
-		if (0 == data_size)
-		{
+		if (0 == data_size){
 			DisconnectPlayer(key);
 			continue;
 		}
+
+
 		// Send/Recv 처리
-		//EXOver *o = reinterpret_cast<EXOver *>(p_over);
-		if (E_RECV == p_over->command)
-		{
+		if (E_RECV == p_over->command){
 			AfterRecv(key, data_size);
 		}
-		else if (E_SEND == p_over->command)
-		{
-			//cout << "Send Complete to Client : " << key << std::endl;
+		else if (E_SEND == p_over->command){ //cout << "Send Complete to Client : " << key << std::endl;
 			delete p_over;
 		}
-		else if (NPC_MOVE == p_over->command)
+		else if (NPC_ACTIVE == p_over->command)
 		{
 			cMonster* monster = dynamic_cast<cMonster*>(objects[key]);
 
@@ -132,30 +130,32 @@ void WorkerThread()
 			std::cout << "Unknown GQCS Event Type!\n";
 			exit(-1);
 		}
+
+		g_MoveSt = high_resolution_clock::now();
 	}
+
 	cout << " exit worker thread " << endl;
 }
 
 void TimerThread()
 {
+	float minStateTime = 0.f;
+
 	while (1)
 	{
-		Sleep(10);
+		Sleep(30);
 
 		if (thread_running == false)
 			break;
 
-		timerMutex.lock();
 		if (event_queue.empty())
-		{
-			timerMutex.unlock();
 			continue;
-		}
 
 		NPC_EVENT top_event = event_queue.top();
 
 		while (top_event.time <= GetCurrTime())
 		{
+			timerMutex.lock();
 			event_queue.pop();
 			timerMutex.unlock();
 
@@ -164,15 +164,13 @@ void TimerThread()
 			//cout << top_event.time << endl;
 			//cout << top_event.id << endl;
 
-			timerMutex.lock();
 			if (event_queue.empty())
-			{
-				timerMutex.unlock();
 				break;
-			}
+
+			timerMutex.lock();
 			top_event = event_queue.top();
+			timerMutex.unlock();
 		}
-		timerMutex.unlock();
 	}
 	//cout << " exit timer thread " << endl;
 
@@ -208,26 +206,25 @@ void ProcessPacket(const UINT cl, BYTE * packet)
 		packet_type = 3;
 	}
 
-	if (packet_type == 3)
-	{
+ 	cPlayer* player = dynamic_cast<cPlayer*>(objects[cl]);
+	bool bAttack_monster = false;
+	
+
+	if (packet_type == 3) {
 		cs_packet_animation *my_packet = reinterpret_cast<cs_packet_animation *>(packet);
 		objects[cl]->anim_num = my_packet->anim_num;
 
-		//cout << my_packet->anim_num << endl;
-
-		cPlayer* player = dynamic_cast<cPlayer*>(objects[cl]);
-
 		unordered_set<UINT> temp;
-
+		player->moveMutex.lock();
 		temp = player->GetViewlist();
-
-		for (auto other : temp)
-		{
-			if (other < MAX_USER)
-			{
+		player->moveMutex.unlock();
+		
+		//플레이어가 공격 했다는 것을 주위 모든플레이어에게 보내줌
+		for (auto other : temp) {
+			if (other < MAX_USER) {
 				if (objects[cl]->GetID() < MAX_USER)
 				{
-					cs_packet_animation p;
+					cs_packet_npc_anim p;
 					p.type = SC_ANIM;
 					p.id = cl;
 					p.size = sizeof(p);
@@ -236,23 +233,31 @@ void ProcessPacket(const UINT cl, BYTE * packet)
 				}
 			}
 		}
-		return;
-	}
-	// 공격 패킷
-	if (packet_type == 2)
-	{
-		//cout << cl << "의 공격패킷을 받았습니다" << endl;
-
-		cPlayer* player = dynamic_cast<cPlayer*>(objects[cl]);
-
-		player->AttackMonster();
-
+		if (my_packet->anim_num == 5) {
+			int target_id = -1;
+			bool is_attack = player->AttackMonster(&target_id);
+			if (is_attack) {
+				for (auto other : temp) {
+					if (other < MAX_USER) {
+						if (objects[cl]->GetID() < MAX_USER && is_attack)
+						{
+							cs_packet_npc_anim p;
+							p.type = SC_ANIM;
+							p.id = target_id;
+							p.anim_num = objects[target_id]->GetAnimNum();
+							p.size = sizeof(p);
+							SendPacket(other, &p);
+						}
+					}
+				}
+			}
+		}
 
 		return;
 	}
 
 	//시야 패킷
-	if (packet_type == 1) 
+	if (packet_type == 1)
 	{
 		//cout << "시야 패킷 받앗습니다 "<< endl;
 		cs_packet_sight * p = reinterpret_cast<cs_packet_sight *>(packet);
@@ -279,7 +284,6 @@ void ProcessPacket(const UINT cl, BYTE * packet)
 		}
 		return;
 	}
-
 	cs_packet_move *p = reinterpret_cast<cs_packet_move *>(packet);
 
 	float x = objects[cl]->GetX();
@@ -289,32 +293,34 @@ void ProcessPacket(const UINT cl, BYTE * packet)
 	float dirZ = p->dir_z * 0.01f; //플레이어의 방향벡터 z축
 
 
+
+	auto t_fElapsed = GetElapsedTime(g_MoveSt);
 	switch (p->type)
 	{
 	case CS_UP:
-		x = x + dirX * OBJECT_SPEED;
-		y = y + dirZ * OBJECT_SPEED;
-		break;
-	case CS_DOWN:
-		x = x - dirX * OBJECT_SPEED;
-		y = y - dirZ * OBJECT_SPEED;
-
-		break;
-	case CS_LEFT:
-		x = x - dirZ * OBJECT_SPEED;
-		y = y + dirX * OBJECT_SPEED;
-
-		break;
-	case CS_RIGHT:
-		x = x + dirZ * OBJECT_SPEED;
-		y = y - dirX * OBJECT_SPEED;
+		x = x + dirX * OBJECT_SPEED*t_fElapsed;
+		y = y + dirZ * OBJECT_SPEED*t_fElapsed;
+		break;					   	
+	case CS_DOWN:				   	
+		x = x - dirX * OBJECT_SPEED*t_fElapsed;
+		y = y - dirZ * OBJECT_SPEED*t_fElapsed;
+								   
+		break;					   
+	case CS_LEFT:				   
+		x = x - dirZ * OBJECT_SPEED*t_fElapsed;
+		y = y + dirX * OBJECT_SPEED*t_fElapsed;
+								   	
+		break;					   	
+	case CS_RIGHT:				   	
+		x = x + dirZ * OBJECT_SPEED*t_fElapsed;
+		y = y - dirX * OBJECT_SPEED*t_fElapsed;
 		break;
 	case CS_TELEPORT:
 		x = x + dirX * OBJECT_SPEED * 10;
 		y = y + dirZ * OBJECT_SPEED * 10;
 		break;
 	case CS_NEXTSTAGE:
-		objects[cl]->SetScene(STAGE_TWO);
+			objects[cl]->SetScene(STAGE_TWO);
 		objects[cl]->SetX(BOARD_WIDTH / 2);
 		objects[cl]->SetZ(900);
 		
@@ -328,55 +334,44 @@ void ProcessPacket(const UINT cl, BYTE * packet)
 
 			SendMoveObject(cl);
 		break;
+	case CS_THREESTAGE:
+			objects[cl]->SetScene(STAGE_THREE);
+		objects[cl]->SetX(BOARD_WIDTH / 2);
+		objects[cl]->SetZ(900);
+
+
+		objects[cl]->SetSightX(dirX);
+		objects[cl]->SetSightZ(dirZ);
+
+		UpdataPlayerView(cl);
+
+		SendSceneObject(cl, objects[cl]->GetScene());
+
+		SendMoveObject(cl);
+		break;
+	case CS_ONESTAGE:
+		objects[cl]->SetScene(STAGE_ONE);
+		objects[cl]->SetX(BOARD_WIDTH / 2);
+		objects[cl]->SetZ(900);
+
+		for (int i = NPC_START; i < MAX_OBJECT_INDEX; ++i) {
+			objects[cl]->SetMyHP(100);
+		}
+
+		objects[cl]->SetSightX(dirX);
+		objects[cl]->SetSightZ(dirZ);
+
+		UpdataPlayerView(cl);
+
+		SendSceneObject(cl, objects[cl]->GetScene());
+
+		SendMoveObject(cl);
+		break;
 	default:
 		cout << "UnKnown Protocol from Client [" << cl << "]" << endl;
 	}
-	// cout << x << " , " << y << endl;
-	// 이동 후에 맵 내에 존재하면.
 
-	//if (CollisionCheck(x, y, BOARD_WIDTH / 2, 50, 15, 15) && objects[cl]->GetScene() == TOWN)
-	//{
-	//	/*
-	//	cout << "충돌했어" << endl;
-	//	*/
-	//	objects[cl]->SetScene(FIELD);
-	//	objects[cl]->SetX(BOARD_WIDTH / 2);
-	//	objects[cl]->SetZ(900);
-	//
-	//
-	//	objects[cl]->SetSightX(dirX);
-	//	objects[cl]->SetSightZ(dirZ);
-	//	//포탈에 들어가면
 
-	//	UpdataPlayerView(cl);
-
-	//	SendSceneObject(cl, objects[cl]->GetScene());
-
-	//	SendMoveObject(cl);
-
-	//	return;
-	//}
-	//if (CollisionCheck(x, y, BOARD_WIDTH / 2, 950, 15, 15) && objects[cl]->GetScene() == FIELD)
-	//{
-	//	/*
-	//	cout << "충돌했어" << endl;
-	//	*/
-	//	objects[cl]->SetScene(TOWN);
-	//	objects[cl]->SetX(BOARD_WIDTH / 2);
-	//	objects[cl]->SetZ(100);
-	//	SendSceneObject(cl, objects[cl]->GetScene());
-	//
-
-	//	objects[cl]->SetSightX(dirX);
-	//	objects[cl]->SetSightZ(dirZ);
-	//	//포탈에 들어가면
-
-	//	UpdataPlayerView(cl);
-
-	//	SendMoveObject(cl);
-
-	//	return;
-	//}
 
 
 	if (x >= 0.0f && x < BOARD_WIDTH && y >= 0.0f && y < BOARD_HEIGHT)
@@ -393,8 +388,8 @@ void ProcessPacket(const UINT cl, BYTE * packet)
 			{
 				//cout << player->GetID() << "번 플레이어가 " << objects[other]->GetID() << "번 오브젝트에게 충돌" << endl;
 				
-				x = x + 2 * player->GetSightX() * OBJECT_SPEED;
-				y = y + 2 * player->GetSightZ() * OBJECT_SPEED;
+				x = x + 2 * player->GetSightX() * OBJECT_SPEED * 0.1f;
+				y = y + 2 * player->GetSightZ() * OBJECT_SPEED * 0.1f;
 
 				break;
 			}
@@ -415,17 +410,19 @@ void ProcessPacket(const UINT cl, BYTE * packet)
 	SendMoveObject(cl);
 }
 
+
 void ProcessEvent(NPC_EVENT& event_object)
 {
 	EXOver *over_ex = new EXOver;
 
-	if (event_object.type == NPC_MOVE) {
-		over_ex->command = NPC_MOVE;
+	if (event_object.type == NPC_ACTIVE) {
+		over_ex->command = NPC_ACTIVE;
 		over_ex->target = event_object.target;
 	}
 
 	PostQueuedCompletionStatus(g_iocp, 1, event_object.id, (LPOVERLAPPED)&over_ex->wsaover);
 }
+
 
 void DisconnectPlayer(UINT cl)
 {
@@ -574,7 +571,6 @@ void UpdataPlayerView(const UINT id)
 
 void AddTimer(const UINT id, const UINT temp_id, const int type, const UINT time)
 {
-	timerQueueMutex.lock();
 	NPC_EVENT new_event;
 
 	new_event.id = id;
@@ -582,6 +578,7 @@ void AddTimer(const UINT id, const UINT temp_id, const int type, const UINT time
 	new_event.time = GetCurrTime() + time;
 	new_event.target = temp_id;
 
+	timerQueueMutex.lock();
 	event_queue.push(new_event);
 	timerQueueMutex.unlock();
 }

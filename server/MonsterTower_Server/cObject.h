@@ -12,6 +12,7 @@ protected:
 	EXOver exover;
 	
 	UINT id;
+	int hp = 100;
 
 	
 	float x, z;
@@ -57,6 +58,7 @@ public:
 	cSector* GetCurrSector() { return my_sector; }
 	cZone* GetCurrZone() { return my_zone; }
 	const SCENE GetScene() { return scene; }
+	int GetMyHP(void) { return hp; }
 public:
 	void SetIsUse(const bool used) { is_use = used; }
 	void SetID(const int n) { id = n; }
@@ -67,9 +69,13 @@ public:
 	void SetSector(cSector* sector) { my_sector = sector; }
 	void SetZone(cZone* zone) { my_zone = zone; }
 	void SetScene(SCENE sc) {scene = sc;}
+
+	void SetMyHP(int temp_hp) { hp = temp_hp; }
+	void Damaged(int temp_hp) { hp -= temp_hp; if (hp <= 0) { hp = 0; } }
 public:
 	void UpdatesSectorSearch();
 	bool CanSee(const UINT i, const UINT j);
+	bool CanAttack(const UINT i, const UINT j);
 	void AdjustRect(RECT& rc);
 	void InsertSector(vector<cSector*>& near_sector, cSector* sector);
 
@@ -82,6 +88,7 @@ public:
 	int GetAnimNum();
 	void SetStateChange(bool exist) { state_change = exist; }
 
+	//
 	void ChangeState(BaseState *newState);
-	void Move(float *temp_x, float *temp_y, float speed);
+	void Move(float speed);
 };

@@ -8,10 +8,13 @@ cMonster::cMonster()
 {
 	my_sector = nullptr;
 	is_Active = false;
+	target_id = -1;
 
 	m_pPrevState = Ideal::Instance();
 	m_pCurrentState = Ideal::Instance();
 	m_pCurrentState->Enter(this);
+
+	hp = 100.f;
 }
 
 cMonster::~cMonster()
@@ -23,104 +26,43 @@ void cMonster::HearBeat(const UINT target_id)
 {
 	bool is_move = false;
 	bool search_near_player = false;
-	int near_player = -1;
-	float distance = 1000.0f;
+	int near_player = target_id;
 
 	UpdatesSectorSearch();
-	
-
-	// near_list 업데이트
-	float move_x = x;
-	float move_z = z;
 	unordered_set<UINT> player_list = near_list;
+	//몬스터의 시야를 정하는 로직
+	for (auto temp_user : player_list) {
+		float temp_distance = sqrtf((x - objects[temp_user]->GetX())*(x - objects[temp_user]->GetX()) +
+			(z - objects[temp_user]->GetZ())*(z - objects[temp_user]->GetZ()));
+		if (temp_distance < MONSTER_RADIUS + 100) {
+			search_near_player = true;
+			near_player = temp_user;
 
-	for (auto player : player_list)
-	{
-		if (player < MAX_USER)
-		{
-			float temp = sqrtf((x - objects[player]->GetX())*(x - objects[player]->GetX()) +
-				(z - objects[player]->GetZ())*(z - objects[player]->GetZ()));
+			float temp_x = objects[near_player]->GetX() - x;
+			float temp_z = objects[near_player]->GetZ() - z;
+			float size_vector = sqrtf((temp_x * temp_x) + (temp_z * temp_z));
 
-			if (temp < MONSTER_RADIUS && temp < distance)
-			{
-				search_near_player = true;
-				distance = temp;
-				near_player = player;
-
-
-				float temp_x = objects[near_player]->GetX() - x;
-				float temp_z = objects[near_player]->GetZ() - z;
-				float size_vector = sqrtf((temp_x * temp_x) + (temp_z * temp_z));
-
-				sight_x = temp_x / size_vector;
-				sight_z = temp_z / size_vector;
-
-				mtx.lock();
-				m_pCurrentState->Excute(this, &move_x, &move_z);
-				mtx.unlock();
-			}
-
+			mtx.lock();
+			sight_x = temp_x / size_vector;
+			sight_z = temp_z / size_vector;
+			mtx.unlock();
 		}
 	}
-
-
-
 	if (search_near_player)
-	{
 		is_move = true;
-	}
 	else
-	{
 		is_move = false;
-	}
 
 
-	if (move_x >= 0.0f && move_x < BOARD_WIDTH && move_z >= 0.0f && move_z < BOARD_HEIGHT && is_move)
-	{
-		x = move_x;
-		z = move_z;
-	}
-	else
-	{
-		sight_x = 0.0f;
-		sight_z = -1.0f;
-	}
 
-
-	//==몬스터 처리
-	//공격범위
-	//
-	if (m_pPrevState == Ideal::Instance() && state_change == false) {
-		mtx.lock();
-		SetStateChange(true);
-		int num = rand() % 2;
-		switch (num) {
-		case 0:
-			ChangeState(Wander::Instance());
-			GetCurState()->Initialize(objects[target_id]);
-			break;
-		case 1:
-			ChangeState(Rush::Instance());
-			GetCurState()->Initialize(objects[target_id]);
-			break;
-		}
-		mtx.unlock();
-	}
 	/*============================================================*/
-
+	EventSendProcess(near_player, GetAnimNum());
+	mtx.lock();
+	GetCurState()->Excute(this);
+	mtx.unlock();
 	//서버처리 (보내기)
-	if (state_change == false) {
-		SetStateChange(true);
-		cs_packet_animation p;
-		p.type = SC_ANIM;
-		p.id = id;
-		p.size = sizeof(p);
-		p.anim_num = GetAnimNum();
-		SendPacket(target_id, &p);
-	}
 	/*============================================================*/
-
-
+	
 
 	unordered_set<UINT> view;
 
@@ -162,17 +104,14 @@ void cMonster::HearBeat(const UINT target_id)
 		
 		if (player->GetIsUse() == false)
 			continue;
+
 		//temp에 있으면
 		if (temp.count(prev) && is_move)
-		{
 			SendMoveObject(prev, id);
-		}
-		//temp에 없으면
 
+		//temp에 없으면
 		if(temp.count(prev) == false)
-		{
 			SendRemoveObject(prev, id);
-		}
 	}
 	//새로 들어온 플레이어처리
 	for (auto curr : temp)
@@ -183,19 +122,38 @@ void cMonster::HearBeat(const UINT target_id)
 			continue;
 
 		if (0 == view.count(curr))
-		{
 			SendPutObject(curr, id);
-		}
 	}
 
+
+
 	//주변에 플레이어가 있으면
-	if (temp.empty() == false)
-	{
-		AddTimer(id, target_id, NPC_MOVE, 10);
+	if (temp.empty() == false){
+		AddTimer(id, near_player, NPC_ACTIVE, 10);
 		return;
+	}
+
+	for (auto temp_user : near_list) {
+		if (temp_user >= MAX_USER) continue;
+		if (!CanSee(id, temp_user)) {
+			mtx.lock();
+			ChangeState(Ideal::Instance());
+			mtx.unlock();
+		}
+		cs_packet_animation p;
+		p.type = SC_ANIM;
+		p.id = id;
+		p.x = x;
+		p.z = z;
+		p.target_id = near_player;
+		p.hp = hp;
+		p.size = sizeof(p);
+		p.anim_num = GetAnimNum();
+		SendPacket(temp_user, &p);
 	}
 	is_Active = false;
 }
+
 
 void cMonster::WakeUpMonster(UINT temp_id)
 {
@@ -203,5 +161,79 @@ void cMonster::WakeUpMonster(UINT temp_id)
 		return;
 	is_Active = true;
 
-	AddTimer(id, temp_id, NPC_MOVE, 200);
+	AddTimer(id, temp_id, NPC_ACTIVE, 200);
+}
+
+void cMonster::EventSendProcess(int target, int AnimNum)
+{
+	//애니메이션이 바뀔때만 처리
+	if (false == state_change)
+	{
+		mtx.lock();
+		GetCurState()->Initialize(objects[target]);
+		SetStateChange(true);
+		mtx.unlock();
+
+		cs_packet_npc_anim p_anim;
+		p_anim.type = SC_ANIM;
+		p_anim.id = id;
+		p_anim.anim_num = AnimNum;
+		p_anim.size = sizeof(p_anim);
+		for (auto temp_user : near_list) {
+			if (temp_user >= MAX_USER) continue;
+			SendPacket(temp_user, &p_anim);
+		}
+		if (AnimNum == NPC_ATTACK) {
+			p_anim.id = target;
+			p_anim.anim_num = 6;
+			for (auto temp_user : near_list) {
+				if (temp_user >= MAX_USER) continue;
+					SendPacket(temp_user, &p_anim);
+			}
+		}
+	}
+
+	//이동, 체력 패킷처리
+	switch (AnimNum)
+	{
+	case NPC_SKILL:
+	case NPC_MOVE:
+		sc_packet_pos p_pos;
+		p_pos.type = SC_POS;
+		p_pos.id = id;
+		p_pos.x;
+		p_pos.y;
+		p_pos.sight_x = sight_x*100;
+		p_pos.sight_z = sight_z*100;
+		p_pos.size = sizeof(p_pos);
+		for (auto temp_user : near_list) {
+			if (temp_user >= MAX_USER) continue;
+			SendPacket(temp_user, &p_pos);
+		}
+		break;
+	case NPC_ATTACK:
+		cs_packet_npc_condition p_attck;
+		p_attck.type = SC_CONDITION;
+		p_attck.id = target;
+		p_attck.hp = objects[target]->GetMyHP();
+		p_attck.size = sizeof(p_attck);
+		for (auto temp_user : near_list) {
+			if (temp_user >= MAX_USER) continue;
+			SendPacket(temp_user, &p_attck);
+		}
+		break;
+	case NPC_DAMAGED:
+		cs_packet_npc_condition p_con;
+		p_con.type = SC_CONDITION;
+		p_con.id = id;
+		p_con.hp = hp;
+		p_con.size = sizeof(p_con);
+		for (auto temp_user : near_list) {
+			if (temp_user >= MAX_USER) continue;
+			SendPacket(temp_user, &p_con);
+		}
+		break;
+	default:
+		break;
+	}
 }

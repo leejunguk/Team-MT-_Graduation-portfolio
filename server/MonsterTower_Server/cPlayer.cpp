@@ -17,6 +17,7 @@ cPlayer::cPlayer() : packet_size(0), saved_size(0)
 	exover.wsabuf.buf = reinterpret_cast<char*>(recv_buf);
 	exover.wsabuf.len = sizeof(recv_buf);
 	my_sector = nullptr;
+	hp = 100.f;
 }
 
 cPlayer::~cPlayer()
@@ -199,22 +200,21 @@ void cPlayer::UpdateViewList()
 	// 내 뷰리스트는 업데이트 되었다.
 }
 
-void cPlayer::AttackMonster()
+bool cPlayer::AttackMonster(int *attack_target)
 {
-	unordered_set<UINT> monster_list;
-
-	viewMutex.lock();
-	for (auto monster : viewlist)
-	{
-		if (monster >= MAX_USER)
-			monster_list.insert(monster);
+	for (int i = MAX_USER; i < MAX_OBJECT_INDEX; ++i) {
+		if (objects[id]->GetScene() != objects[i]->GetScene()) continue;
+		if (!CanAttack(id, i)) continue;
+		NonTartgetStep(i);
+		*attack_target = i;
+		return true;
 	}
-	viewMutex.unlock();
+	return false;
+}
 
-	for (auto monster : monster_list)
-	{
-
-	}
+void cPlayer::NonTartgetStep(int i)
+{
+	objects[i]->ChangeState(BeAttack::Instance());
 }
 
 void cPlayer::Clear()

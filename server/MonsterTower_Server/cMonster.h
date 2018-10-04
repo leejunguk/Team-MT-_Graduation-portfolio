@@ -3,18 +3,17 @@
 
 class cMonster : public cObject
 {
-	float init_x;
-	float init_z;
-	int hp;
+	UINT target_id;
 
 	volatile bool is_Active;
+
+	float update_sec = 0.f;
 public:
 	cMonster();
 	virtual ~cMonster();
 public:
 	void HearBeat(const UINT target_id);
 	void WakeUpMonster(UINT temp_id);
+	void EventSendProcess(int target, int AnimNum);
 public:
-	void SetInitX(float x) { init_x = x; }
-	void SetInitZ(float z) { init_z = z; }
 };

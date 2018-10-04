@@ -40,6 +40,9 @@
     <ClCompile Include="MonsterAI.cpp">
       <Filter>source\MonsterFSM</Filter>
     </ClCompile>
+    <ClCompile Include="CEffect.cpp">
+      <Filter>source\object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cMonster.h">
@@ -89,6 +92,9 @@
     </ClInclude>
     <ClInclude Include="MonsterAI.h">
       <Filter>source\MonsterFSM</Filter>
+    </ClInclude>
+    <ClInclude Include="CEffect.h">
+      <Filter>source\object</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

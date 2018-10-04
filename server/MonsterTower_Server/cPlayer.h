@@ -22,7 +22,9 @@ public:
 	void RecvPacket();
 	void ReadPacket(const UINT id, const int transferred);
 	void UpdateViewList();
-	void AttackMonster();
+	
+	bool AttackMonster(int *attack_target);
+	void NonTartgetStep(int i);
 public:
 	void Clear();
 public:

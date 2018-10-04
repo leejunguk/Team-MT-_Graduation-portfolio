@@ -7,6 +7,8 @@ cObject::cObject() : is_use(false), id(-1), x((float)(BOARD_WIDTH/2)), z((float)
 {
 	exover.command = E_RECV;
 	scene = STAGE_ONE;
+	x = 0; z = 0;
+	state_change = false;
 }
 cObject::~cObject()
 {
@@ -14,18 +16,22 @@ cObject::~cObject()
 
 int cObject::GetAnimNum()
 {
+	int temp_num = 0;
+	//몬스터 모델 애니메이션 넘버에 따른 반환
 	if (m_pCurrentState == Ideal::Instance())
-		return 0;
-	/*else if (m_pCurrentState == Move::Instance())
-		return 1;
+		return NPC_IDLE- temp_num;
+	else if (m_pCurrentState == Move::Instance())
+		return NPC_MOVE- temp_num;
 	else if (m_pCurrentState == Attack::Instance())
-		return 2;
+		return NPC_ATTACK- temp_num;
 	else if (m_pCurrentState == BeAttack::Instance())
-		return 3;
+		return NPC_DAMAGED- temp_num;
 	else if (m_pCurrentState == Rush::Instance())
-		return 1;*/
-	else
+		return NPC_SKILL - temp_num;
+	else if (m_pCurrentState == Wander::Instance())
 		return 0;
+	else
+		return NPC_IDLE- temp_num;
 }
 
 
@@ -41,38 +47,32 @@ void cObject::UpdatesSectorSearch()
 
 	near_sector.clear();
 	near_list.clear();
-	temp_obj.clear();
 	
-	/*InsertSector(near_sector, GetCurrZone()->GetSector(x, z));
+	InsertSector(near_sector, GetCurrZone()->GetSector(x, z));
 	InsertSector(near_sector, GetCurrZone()->GetSector(rc.left, rc.top));
 	InsertSector(near_sector, GetCurrZone()->GetSector(rc.right, rc.top));
 	InsertSector(near_sector, GetCurrZone()->GetSector(rc.left, rc.bottom));
-	InsertSector(near_sector, GetCurrZone()->GetSector(rc.right, rc.bottom));*/
+	InsertSector(near_sector, GetCurrZone()->GetSector(rc.right, rc.bottom));
 
-	/*for (auto sector : near_sector)
+	for (auto sector : near_sector)
 	{
 		sector->sector_mutex.lock();
 		unordered_set<UINT> temp = sector->GetInPlayer();
 		sector->sector_mutex.unlock();
-	}*/
-	for (int i = 0; i < MAX_OBJECT_INDEX; ++i) {
-		if (objects[i]->is_use) {
-			mtx.lock();
-			temp_obj.insert(i);
-			mtx.unlock();
-		}
-	}
-	for (auto near_player : temp_obj)
-	{
-		if (near_player == id)
-			continue;
-		if (CanSee(near_player, id) == true)
+	
+		for (auto near_player : temp)
 		{
-			mtx.lock();
-			near_list.insert(near_player);
-			mtx.unlock();
+			if (near_player == id)
+				continue;
+			if (CanSee(near_player, id) == true)
+			{
+				mtx.lock();
+				near_list.insert(near_player);
+				mtx.unlock();
+			}
 		}
 	}
+
 }
 void cObject::AdjustRect(RECT& rc)
 {
@@ -94,6 +94,15 @@ bool cObject::CanSee(const UINT i, const UINT j)
 
 	return (dist <= (VIEW_RADIUS) * (VIEW_RADIUS));
 }
+bool cObject::CanAttack(const UINT i, const UINT j)
+{
+	int x = objects[i]->GetX() - objects[j]->GetX();
+	int y = objects[i]->GetZ() - objects[j]->GetZ();
+
+	int dist = x * x + y * y;
+
+	return (dist <= (MONSTER_ATTACK_RADIUS) * (MONSTER_ATTACK_RADIUS));
+}
 void cObject::InsertSector(vector<cSector*>& near_sector, cSector* sector)
 {
 	auto iter = find(near_sector.begin(), near_sector.end(), sector);
@@ -114,8 +123,11 @@ void cObject::ChangeState(BaseState *nowState)
 	nowState->Enter(this);
 }
 
-void cObject::Move(float *temp_x, float *temp_y, float speed)
+void cObject::Move(float speed)
 {
-	*temp_x = *temp_x + sight_x * speed;
-	*temp_y = *temp_y + sight_z * speed;
+	if (x >= 0.0f && x < BOARD_WIDTH && z >= 0.0f && z < BOARD_HEIGHT)
+	{
+		x = x + sight_x * speed;
+		z = z + sight_z * speed;
+	}
 }

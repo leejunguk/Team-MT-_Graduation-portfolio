@@ -8,9 +8,10 @@
 #define BOARD_WIDTH   5100
 #define BOARD_HEIGHT  5100
 
-#define MAX_USER 10
-#define NPC_START  10
-#define MAX_OBJECT_INDEX 11
+#define MAX_USER 3
+#define NPC_START  3
+#define MAX_OBJECT_INDEX 6
+#define MAX_EFFECT_INDEX 20
 
 #define MAX_STR_SIZE  100
 
@@ -24,6 +25,9 @@
 #define CS_CHAT		8
 #define CS_ANIM		9
 #define CS_NEXTSTAGE 10
+#define CS_THREESTAGE 11
+#define CS_ONESTAGE 12
+
 
 #define SC_POS           1
 #define SC_PUT_PLAYER    2
@@ -31,6 +35,7 @@
 #define SC_CHAT			4
 #define SC_SCENE		5
 #define SC_ANIM			6
+#define SC_CONDITION	8
 #define SC_NEXTSTAGE	7
 
 enum player_animaition
@@ -110,6 +115,28 @@ struct cs_packet_animation {
 	BYTE size;
 	BYTE type;
 	WORD id;
+	WORD target_id;
+	char anim_num;
+	WORD hp;
+	float x;
+	float z;
+};
+
+//======
+//======
+struct cs_packet_npc_anim {
+	BYTE size;
+	BYTE type;
+	WORD id;
 	char anim_num;
 };
+
+struct cs_packet_npc_condition {
+	BYTE size;
+	BYTE type;
+	WORD id;
+	WORD hp;
+};
+
+//
 #pragma pack (pop)
