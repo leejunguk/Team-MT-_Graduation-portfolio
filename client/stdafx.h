@@ -52,6 +52,10 @@ using namespace std;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
+const int JOB_MAGICIAN = 0;
+const int JOB_SWORDER = 1;
+
+
 #define VS_SLOT_SKINNEDBONE		0x02
 
 using Microsoft::WRL::ComPtr;

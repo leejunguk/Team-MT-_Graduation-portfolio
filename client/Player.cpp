@@ -280,21 +280,30 @@ void CPlayer::Fire() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CAirplanePlayer
 
-CAirplanePlayer::CAirplanePlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext, int nMeshes) : CPlayer(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pContext, nMeshes)
+CAirplanePlayer::CAirplanePlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext, int nMeshes, int Jobnumber) : CPlayer(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pContext, nMeshes)
 {
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 	if (m_pCamera) m_pCamera->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	
-	
-	//LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"../Assets/Model/spider.txt");
-	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "FireMagician_Idle.data");
-	//texture 추가 ===========================================================================05.05
+	m_PlayerJob = Jobnumber;
+
 	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 	TCHAR pstrPathName[64] = { '\0' };
-	_tcscat_s(pstrPathName, 128, _T("FireMagician.dds"));
-	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
-	
+	if (Jobnumber == JOB_SWORDER)
+	{
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/RoyaleGuard_Stand4.data");
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/RoyaleGuard.dds"));
+		pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+		SetScaleWorldM(0.4f, 0.4f, 0.4f);
+	}
+	else
+	{
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/FireMagician_Idle.data");
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/FireMagician.dds"));
+		pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+		//SetRotateWorldM(90.f,300.f,120.f);
+	}
+
 
 	CMaterial *pMaterial = NULL;
 	pMaterial = new CMaterial();
@@ -318,7 +327,7 @@ CAirplanePlayer::CAirplanePlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommand
 	pMaterial->SetShader(pShader);
 	if (pMaterial) SetMaterial(pMaterial);
 
-
+	//SetScale(0.8f, 0.8f, 0.8f);
 	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)pContext;
 	//SetPosition(XMFLOAT3(pTerrain->GetWidth()*0.5f, 2000.0f, pTerrain->GetLength()*0.5f));
 	SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -425,15 +434,25 @@ void CAirplanePlayer::OnCameraUpdateCallback(float fTimeElapsed)
 
 
 //////////////////////////
-COtherPlayer::COtherPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext, int nMeshes) : CPlayer(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pContext, nMeshes)
+COtherPlayer::COtherPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext, int nMeshes, int Jobnumber) : CPlayer(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pContext, nMeshes)
 {
-	//LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"../Assets/Model/spider.txt");
-	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "FireMagician_Idle.data");
-	//texture 추가 ===========================================================================05.05
+	m_PlayerJob = Jobnumber;
+
 	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 	TCHAR pstrPathName[64] = { '\0' };
-	_tcscat_s(pstrPathName, 128, _T("FireMagician.dds"));
-	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+	if (Jobnumber == JOB_SWORDER)
+	{
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/RoyaleGuard_Stand4.data");
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/RoyaleGuard.dds"));
+		pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+		SetScaleWorldM(0.4f,0.4f,0.4f);
+	}
+	else
+	{
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/FireMagician_Idle.data");
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/FireMagician.dds"));
+		pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+	}
 
 
 	CMaterial *pMaterial = NULL;
@@ -562,11 +581,11 @@ void COtherPlayer::OnCameraUpdateCallback(float fTimeElapsed)
 CFireBall::CFireBall(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext, int nMeshes) : CPlayer(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pContext, nMeshes)
 {
 	//LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"../Assets/Model/spider.txt");
-	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "FireMagician_Idle.data");
+	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/FireMagician_Idle.data");
 	//texture 추가 ===========================================================================05.05
 	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 	TCHAR pstrPathName[64] = { '\0' };
-	_tcscat_s(pstrPathName, 128, _T("FireMagician.dds"));
+	_tcscat_s(pstrPathName, 128, _T("Assets/Model/FireMagician.dds"));
 	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
 
 
@@ -777,4 +796,175 @@ void CTitlePlayer::OnCameraUpdateCallback(float fTimeElapsed)
 {
 }
 
+//-------------------------------------------------------------------------------------------
+
+
+//-------------------------------------------------------------------------------------------
+CShadow::CShadow(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext, int nMeshes, int Jobnumber) : CPlayer(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pContext, nMeshes)
+{
+	m_PlayerJob = Jobnumber;
+
+	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	TCHAR pstrPathName[64] = { '\0' };
+	if (Jobnumber == JOB_SWORDER)
+	{
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/RoyaleGuard_Stand4.data");
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/RoyaleGuard.dds"));
+		pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+		SetScaleWorldM(0.4f, 0.4f, 0.4f);
+	}
+	else
+	{
+		LoadGeometryFromShadowFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/FireMagician_Idle.data");
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/FireMagician.dds"));
+		pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+		//SetScaleWorldM(1.4f, 1.4f, 1.4f);
+	}
+
+
+	CMaterial *pMaterial = NULL;
+	pMaterial = new CMaterial();
+	//pMaterial->m_xmf4Albedo = xmf4MaterialAlbedo;
+
+	pMaterial->SetTexture(pTexture);
+
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
+
+	ID3D12Resource *pd3dcbResource = CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CShadowShader *pShader = new CShadowShader();
+	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	pShader->CreateCbvAndSrvDescriptorHeaps(pd3dDevice, pd3dCommandList, 1, 1);
+	pShader->CreateConstantBufferViews(pd3dDevice, pd3dCommandList, 1, pd3dcbResource, ncbElementBytes);
+	pShader->CreateShaderResourceViews(pd3dDevice, pd3dCommandList, pTexture, 5, true);
+
+	SetCbvGPUDescriptorHandle(pShader->GetGPUCbvDescriptorStartHandle());
+
+	pMaterial->SetShader(pShader);
+	if (pMaterial) SetMaterial(pMaterial);
+
+	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
+
+	if (m_pCamera) m_pCamera->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	
+	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)pContext;
+	float x = pTerrain->GetWidth()*0.5f;
+	float z = pTerrain->GetLength()*0.5f;
+	SetPosition(XMFLOAT3(x, pTerrain->GetHeight(x,z), z));
+	//RotateWorldM(38.f,16.f,37.f);
+	//Rotate1(38.f, 16.f, 37.f);
+	//CPlayer::Rotate(180.f, -190.f, -381.f);
+	//CGameObject::Rotate(38.f, 16.f, 37.f);
+	//SetRotateWorldM(38.f, 16.f, 37.f);
+	//CGameObject::RotateWorldM
+	//SetRotateWorldM(-90.f,-180.f,-190.f);
+	SetPlayerUpdatedContext(pTerrain);
+	SetCameraUpdatedContext(pTerrain);
+}
+void CShadow::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
+{
+	XMVECTOR shadowPlane = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // xzplane
+	XMFLOAT3 tmplight{ 1.0f,1.0f,1.0f };
+	const XMFLOAT3* p = &tmplight;
+	XMVECTOR toMainLight = -XMLoadFloat3(p); //조명 가져오기 
+	XMMATRIX S = XMMatrixShadow(shadowPlane, toMainLight);
+	XMMATRIX shadowOffsetY = XMMatrixTranslation(100.0f, 400.001f, 100.f);
+	//m_xmf4x4World._41 = 1000;
+	//m_xmf4x4World._42 = 3000;
+	//m_xmf4x4World._43 = 4000;
+	//XMStoreFloat4x4(&m_pcbMappedGameObject->m_xmf4x4World, XMLoadFloat4x4(&m_xmf4x4World)*S * shadowOffsetY);
+
+	XMStoreFloat4x4(&m_pcbMappedPlayer->m_xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+
+	D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = m_pd3dcbPlayer->GetGPUVirtualAddress();
+	pd3dCommandList->SetGraphicsRootConstantBufferView(ROOT_PARAMETER_PLAYER, d3dGpuVirtualAddress);
+}
+
+
+CShadow::~CShadow()
+{
+}
+
+CCamera * CShadow::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
+{
+	DWORD nCurrentCameraMode = (m_pCamera) ? m_pCamera->GetMode() : 0x00;
+	if (nCurrentCameraMode == nNewCameraMode) return(m_pCamera);
+	switch (nNewCameraMode)
+	{
+	case FIRST_PERSON_CAMERA:
+		SetFriction(250.0f);
+		//SetGravity(XMFLOAT3(0.0f, -400.0f, 0.0f));
+		SetMaxVelocityXZ(300.0f);
+		SetMaxVelocityY(400.0f);
+		m_pCamera = OnChangeCamera(FIRST_PERSON_CAMERA, nCurrentCameraMode);
+		m_pCamera->SetTimeLag(0.0f);
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, 20.0f, 0.0f));
+		m_pCamera->GenerateProjectionMatrix(1.01f, 50000.0f, ASPECT_RATIO, 60.0f);
+		break;
+	case SPACESHIP_CAMERA:
+		SetFriction(125.0f);
+		SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
+		SetMaxVelocityXZ(300.0f);
+		SetMaxVelocityY(400.0f);
+		m_pCamera = OnChangeCamera(SPACESHIP_CAMERA, nCurrentCameraMode);
+		m_pCamera->SetTimeLag(0.0f);
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, 0.0f, 0.0f));
+		m_pCamera->GenerateProjectionMatrix(1.01f, 50000.0f, ASPECT_RATIO, 60.0f);
+		break;
+	case THIRD_PERSON_CAMERA:
+		SetFriction(250.0f);
+		SetGravity(XMFLOAT3(0.0f, -400.0f, 0.0f));
+		SetMaxVelocityXZ(300.0f);
+		SetMaxVelocityY(400.0f);
+		m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
+		m_pCamera->SetTimeLag(0.25f);
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, 20.0f, -50.0f));
+		m_pCamera->GenerateProjectionMatrix(1.01f, 50000.0f, ASPECT_RATIO, 60.0f);
+		break;
+	default:
+		break;
+	}
+	Update(fTimeElapsed);
+
+	return(m_pCamera);
+}
+
+void CShadow::OnPlayerUpdateCallback(float fTimeElapsed)
+{
+	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)m_pPlayerUpdatedContext;
+	XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+	XMFLOAT3 xmf3PlayerPosition = GetPosition();
+	int z = (int)(xmf3PlayerPosition.z / xmf3Scale.z);
+	bool bReverseQuad = ((z % 2) != 0);
+	float fHeight = pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z, bReverseQuad) + 6.0f;
+	if (xmf3PlayerPosition.y < fHeight)
+	{
+		XMFLOAT3 xmf3PlayerVelocity = GetVelocity();
+		//xmf3PlayerVelocity.y = 0.0f;
+		//SetVelocity(xmf3PlayerVelocity);
+		//xmf3PlayerPosition.y = fHeight;
+		//SetPosition(xmf3PlayerPosition);
+	}
+}
+
+void CShadow::OnCameraUpdateCallback(float fTimeElapsed)
+{
+	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)m_pCameraUpdatedContext;
+	XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+	XMFLOAT3 xmf3CameraPosition = m_pCamera->GetPosition();
+	int z = (int)(xmf3CameraPosition.z / xmf3Scale.z);
+	bool bReverseQuad = ((z % 2) != 0);
+	float fHeight = pTerrain->GetHeight(xmf3CameraPosition.x, xmf3CameraPosition.z, bReverseQuad) + 5.0f;
+	if (xmf3CameraPosition.y <= fHeight)
+	{
+		xmf3CameraPosition.y = fHeight;
+		m_pCamera->SetPosition(xmf3CameraPosition);
+		if (m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
+		{
+			CThirdPersonCamera *p3rdPersonCamera = (CThirdPersonCamera *)m_pCamera;
+			p3rdPersonCamera->SetLookAt(GetPosition());
+		}
+	}
+}
 //-------------------------------------------------------------------------------------------

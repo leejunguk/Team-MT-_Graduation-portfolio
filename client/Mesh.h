@@ -4,6 +4,7 @@
 
 #pragma once
 //#include "Object.h"
+#include "stdafx.h"
 class CGameObject;
 //class Mesh;
 //class CHeightMapImage;
@@ -94,6 +95,9 @@ public:
 	CIlluminatedTexturedVertex(XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Normal = XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2 xmf2TexCoord = XMFLOAT2(0.0f, 0.0f)) { m_xmf3Position = xmf3Position; m_xmf3Normal = xmf3Normal; m_xmf2TexCoord = xmf2TexCoord; }
 	~CIlluminatedTexturedVertex() { }
 };
+
+
+
 //05.08 mesh 추가  vertex에 boneincices랑  weight까지 들어가게 SceletonTexturevertex 생성
 class CSceletonTexturedVertex : public CIlluminatedTexturedVertex
 {
@@ -110,7 +114,11 @@ public:
 	}
 	~CSceletonTexturedVertex() { }
 };
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//
+/*=====================================*/
+/*=====================================*/
 //
 class CMesh
 {

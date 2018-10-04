@@ -12,11 +12,11 @@
 #define BOARD_WIDTH   5100
 #define BOARD_HEIGHT  5100
 
-#define MAX_USER 10
-#define NPC_START  10
-#define MAX_OBJECT_INDEX 30
+#define MAX_USER 3
+#define NPC_START  3
+#define MAX_OBJECT_INDEX 6
 
-#define VIEW_RADIUS 50
+#define VIEW_RADIUS 1000
 
 #define MAX_STR_SIZE  100
 
@@ -30,6 +30,9 @@
 #define CS_CHAT		8
 #define CS_ANIM		9
 #define CS_NEXTSTAGE 10
+#define CS_THREESTAGE 11
+#define CS_ONESTAGE 12
+
 
 #define SC_POS           1
 #define SC_PUT_PLAYER    2
@@ -60,7 +63,7 @@ enum SCENE
 
 enum player_animaition
 {
-	player_idle, front_run, back_run, left_run, right_run 
+	player_idle, front_run, back_run, left_run, right_run, player_attack, player_hit
 };
 
 #define PI				3.141592
@@ -104,6 +107,7 @@ struct sc_packet_pos {
 	float y;
 	char sight_x;
 	char sight_z;
+	
 };
 
 struct sc_packet_put_player {
@@ -141,6 +145,29 @@ struct cs_packet_animation {
 	BYTE size;
 	BYTE type;
 	WORD id;
+	WORD target_id;
+	char anim_num;
+	WORD hp;
+	float x;
+	float z;
+};
+
+//======
+//======
+struct cs_packet_npc_anim {
+	BYTE size;
+	BYTE type;
+	WORD id;
 	char anim_num;
 };
+
+struct cs_packet_npc_condition {
+	BYTE size;
+	BYTE type;
+	WORD id;
+	WORD hp;
+};
+
+//
+
 #pragma pack (pop)

@@ -65,6 +65,15 @@
     <Filter Include="08.UI">
       <UniqueIdentifier>{68092ded-2823-4148-a2db-9534f0a0dd07}</UniqueIdentifier>
     </Filter>
+    <Filter Include="09.Sound">
+      <UniqueIdentifier>{d5d0ffeb-ad5d-422e-bf72-3d130e231a7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Effect">
+      <UniqueIdentifier>{490e7a16-48a4-45ce-81b1-c30533869876}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shadow">
+      <UniqueIdentifier>{6d42c3e8-226c-475a-9903-977e04e0c8e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -139,6 +148,15 @@
     <ClInclude Include="d3dx12.h">
       <Filter>98.default</Filter>
     </ClInclude>
+    <ClInclude Include="sound.h">
+      <Filter>09.Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="UIShader.h">
+      <Filter>08.UI</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectMgr.h">
+      <Filter>Effect</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameFramework.cpp">
@@ -195,6 +213,12 @@
     <ClCompile Include="MathHelper.cpp">
       <Filter>98.default</Filter>
     </ClCompile>
+    <ClCompile Include="UIShader.cpp">
+      <Filter>08.UI</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectMgr.cpp">
+      <Filter>Effect</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LabProject08-8.rc">
@@ -216,7 +240,7 @@
     <FxCompile Include="Light.hlsl">
       <Filter>96.HLSL</Filter>
     </FxCompile>
-    <FxCompile Include="UIShader.hlsl">
+    <FxCompile Include="UI.hlsl">
       <Filter>96.HLSL</Filter>
     </FxCompile>
   </ItemGroup>

@@ -357,7 +357,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterAttackFireStorm = false;
 				
 				my_packet->anim_num = anim_num;
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -377,8 +377,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterAttackFireStorm = false;
 
 				my_packet->anim_num = anim_num;
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -398,8 +397,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterAttackFireStorm = false;
 				
 				my_packet->anim_num = anim_num;
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -419,8 +417,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterAttackFireStorm = false;
 
 				my_packet->anim_num = anim_num;
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -431,8 +428,9 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 		case VK_SPACE:
 			if (!bCharaterAttackFireStorm)
 			{
-				anim_num = 5;
+ 				anim_num = player_attack;
 				m_pPlayer->GetMesh()->SetAnimation(anim_num);
+				m_pPlayer->isFire = true;
 
 				bCharaterRunFront = false;
 				bCharaterRunBack = false;
@@ -441,8 +439,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterAttackFireStorm = true;
 
 				my_packet->anim_num = anim_num;
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -469,8 +466,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterRunRight = false;
 
 				my_packet->anim_num = anim_num;
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -489,8 +485,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterRunRight = false;
 
 				my_packet->anim_num = anim_num;
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -508,9 +503,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterRunLeft = false;
 				bCharaterRunRight = false;
 				my_packet->anim_num = anim_num;
-
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -529,8 +522,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				bCharaterRunRight = false;
 
 				my_packet->anim_num = anim_num;
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -550,8 +542,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 
 				bCharaterAttackFireStorm = false;
 				my_packet->anim_num = anim_num;
-
-
+				m_pShadow->GetMesh()->SetAnimation(my_packet->anim_num);
 				int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
 				if (ret) {
 					int error_code = WSAGetLastError();
@@ -669,6 +660,10 @@ void CGameFramework::OnDestroy()
 
 void CGameFramework::BuildObjects()
 {
+
+	soundMgr = new SoundMgr();
+	soundMgr->sound_bgm();
+
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
 
 	//-------------------------------------
@@ -676,17 +671,25 @@ void CGameFramework::BuildObjects()
 	m_pTitleScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
 	m_pTitlePlayer = new CTitlePlayer(m_pd3dDevice, m_pd3dCommandList, m_pTitleScene->GetGraphicsRootSignature(), m_pTitleScene->GetTerrain(), 1);
 
-	m_pStageOneScene = new CStageOneScene(); 
+	m_pStageOneScene = new CStageOneScene();
 	m_pStageOneScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
-	m_pStageOnePlayer = new CAirplanePlayer(m_pd3dDevice, m_pd3dCommandList, m_pStageOneScene->GetGraphicsRootSignature(), m_pStageOneScene->GetTerrain(), 1);
-
 	m_pStageTwoScene = new CStageTwoScene();
 	m_pStageTwoScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
+	
+	m_pStageOnePlayer = new CAirplanePlayer(m_pd3dDevice, m_pd3dCommandList, m_pStageOneScene->GetGraphicsRootSignature(), m_pStageOneScene->GetTerrain());
+	
+	m_pSwordPlayer = new CAirplanePlayer(m_pd3dDevice, m_pd3dCommandList, m_pStageOneScene->GetGraphicsRootSignature(), m_pStageOneScene->GetTerrain(), 1);
 
-	m_pStageThreeScene = new CStageThreeScene();
-	m_pStageThreeScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
+	//m_pStageTwoScene = new CStageTwoScene();
+	//m_pStageTwoScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
 
+	//m_pStageThreeScene = new CStageThreeScene();
+	//m_pStageThreeScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
 
+	m_pUIShader = new UIShader();
+	m_pUIShader->CreateGraphicsRootSignature(m_pd3dDevice);
+	m_pUIShader->CreateShader(m_pd3dDevice, 1);
+	m_pUIShader->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
 	//-------------------------------------------UI
 	//------------------------------------
 
@@ -712,30 +715,112 @@ void CGameFramework::BuildObjects()
 	//--------------------------------------------
 	// Create OtherPlayer for rendering
 	//-------------------------------------------
+	//waterTerrain 쓰기위한 변수 --------------------------------------------
+	XMFLOAT3 xmf3WaterScale(20.0f, 2.0f, 20.0f);
+	XMFLOAT4 xmf4WaterColor(0.9f, 0.9f, 0.1f, 0.0f);
+	m_pWaterHeight = new CWaterHeightmap(m_pd3dDevice, m_pd3dCommandList, m_pCurrScene->GetGraphicsRootSignature(), _T("LAssets/Image/Terrain/WaterMap.raw"), 257, 257, 257, 257, xmf3WaterScale, xmf4WaterColor);
+	m_pWaterHeight->SetPosition(850, -275, 1300);
+
+
 
 	m_ppOtherPlayers = new CPlayer*[MAX_USER];
 	m_ppMonsters = new CGameObject*[MAX_OBJECT_INDEX - MAX_USER];
 
+	CHeightMapTerrain *tmpterrain = m_pStageOneScene->GetTerrain();
+	//tmpterrain->GetHeightMapLength
+	//성벽
+
+	m_nWall = 1;
+	m_ppWalls = new CGameObject*[m_nWall];
+
+	int looopnum = 0;
+	int looppnum2 = 0;
+	int looppnum3 = 0;
+	int	looppnum4 = 0;
+	int Terrianwidth = tmpterrain->GetWidth();
+	int Terrianlength = tmpterrain->GetLength();
+	for (int i = 0; i < m_nWall; ++i)
+	{
+		int x = tmpterrain->GetLength();
+		int y = tmpterrain->GetWidth();
+
+		++looopnum;
+
+		m_ppWalls[i] = new CWall(m_pd3dDevice, m_pd3dCommandList, m_pCurrScene->GetGraphicsRootSignature());
+
+		if ((m_nWall / 4) * 3 < looopnum)
+		{
+
+			++looppnum4;
+			int posY = (Terrianwidth / 10) *looppnum4;
+			m_ppWalls[i]->SetPosition(XMFLOAT3(x - Terrianwidth, tmpterrain->GetHeight(x, posY), posY - 200));
+			m_ppWalls[i]->RotateWorldM(-90.f, 270.0f, 0.0f);
+		}
+		else if (m_nWall / 2 < looopnum)
+		{
+
+			++looppnum3;
+			int posX = ((Terrianlength / 10) *looppnum3);
+			m_ppWalls[i]->SetPosition(XMFLOAT3(posX, tmpterrain->GetHeight(posX, y + Terrianlength), y - Terrianlength));
+			m_ppWalls[i]->RotateWorldM(-90.f, 180.0f, 0.0f);
+		}
+		else if (m_nWall / 4 < looopnum)
+		{
+
+			++looppnum2;
+			int posY = (Terrianlength / 10) *looppnum2;
+			m_ppWalls[i]->SetPosition(XMFLOAT3(x, tmpterrain->GetHeight(x, posY), posY - 200));
+			m_ppWalls[i]->RotateWorldM(-90.f, 90.0f, 0.0f);
+		}
+
+		else
+		{
+			int posX = (Terrianwidth / 10)*looopnum;
+			m_ppWalls[i]->SetPosition(XMFLOAT3(posX, tmpterrain->GetHeight(posX, y), y));
+			m_ppWalls[i]->RotateWorldM(-90.f, 0.0f, 0.0f);
+		}
+	}
+
 
 	for (int i = 0; i < MAX_USER; ++i) {
+
 		m_ppOtherPlayers[i] = new COtherPlayer(m_pd3dDevice, m_pd3dCommandList, m_pCurrScene->GetGraphicsRootSignature(), m_pCurrScene->GetTerrain(), 1);
 		m_ppOtherPlayers[i]->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 		m_ppOtherPlayers[i]->SetVisible(false);
 	}
 	for (int i = 0; i < MAX_OBJECT_INDEX - MAX_USER; ++i) {
-		m_ppMonsters[i] = new CDinosour(m_pd3dDevice, m_pd3dCommandList, m_pStageOneScene->GetGraphicsRootSignature());
-		m_ppMonsters[i]->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+		m_ppMonsters[i] = new CDinosour(m_pd3dDevice, m_pd3dCommandList, m_pStageOneScene->GetGraphicsRootSignature(), i );
+		if( i == 0 )
+			m_ppMonsters[i]->SetPosition(XMFLOAT3(0.0f, 96.0f, 0.0f));
 		m_ppMonsters[i]->SetVisible(false);
+
 	}
+	//////
+	//XMFLOAT3 t_pos;
 
+	//m_pEffectMgr = new CEffectMgr(m_pd3dDevice, m_pd3dCommandList, m_pStageOneScene->GetGraphicsRootSignature());
+	m_pCBall = new CBall(m_pd3dDevice, m_pd3dCommandList, m_pStageOneScene->GetGraphicsRootSignature());
 
+	m_pShadow = new CShadow(m_pd3dDevice, m_pd3dCommandList, m_pStageOneScene->GetGraphicsRootSignature(), m_pStageOneScene->GetTerrain(), 1);
+	//m_pShadow->Rotate1(0, 0, 90);
+	//=====
 	m_pd3dCommandList->Close();
 	ID3D12CommandList *ppd3dCommandLists[] = { m_pd3dCommandList };
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
 
 	WaitForGpuComplete();
 
+
+	//if (m_pEffectMgr) m_pEffectMgr->ReleaseUploadBuffer();
 	if (m_pPlayer) m_pPlayer->ReleaseUploadBuffers();
+	if (m_pShadow) m_pShadow->ReleaseUploadBuffers();
+
+
+	for (int i= 0; i < m_nWall; ++i)
+	{
+		m_ppWalls[i]->ReleaseUploadBuffers();
+	}
+	if (m_pWaterHeight) m_pWaterHeight->ReleaseUploadBuffers();
 	
 	for (int i = 0; i < MAX_USER; ++i)
 	{
@@ -748,26 +833,27 @@ void CGameFramework::BuildObjects()
 			m_ppMonsters[i]->ReleaseUploadBuffers();
 	}
 
-	
 	if (m_pCurrScene) m_pCurrScene->ReleaseUploadBuffers();
 
-	//if (m_pUIShader) m_pUIShader->ReleaseUploadBuffers();
 
 	m_GameTimer.Reset();
 }
 
 void CGameFramework::ReleaseObjects()
 {
+	//if (m_pEffectMgr) delete m_pEffectMgr;
 	if (m_pPlayer) delete m_pPlayer;
 	for (int i = 0; i < MAX_USER; ++i) {
 		if (m_ppOtherPlayers)
 			delete m_ppOtherPlayers[i];
 	}
+	if (m_pWaterHeight) m_pWaterHeight->Release();
+	//if (m_pWaterHeight) delete m_pWaterHeight;
 	for (int i = 0; i < MAX_OBJECT_INDEX - MAX_USER; ++i)
 	{
 		if (m_ppMonsters)
 			delete m_ppMonsters[i];
-	}
+	} 
 
 	if (m_pCurrScene) m_pCurrScene->ReleaseObjects();
 	if (m_pCurrScene) delete m_pCurrScene;
@@ -806,12 +892,18 @@ void CGameFramework::ProcessInput()
 		if (pKeysBuffer['1'] & 0xF0 && m_pCurrScene == m_pTitleScene) {
 			InitServer();
 			m_pCurrScene = m_pStageOneScene;
-			m_pPlayer = m_pStageOnePlayer;
+			if (g_myid == 0 || g_myid % 2 == 0)
+				m_pPlayer = m_pStageOnePlayer;
+			else
+				m_pPlayer = m_pSwordPlayer;
+
 			m_pCurrScene->m_pPlayer = m_pPlayer;
 			m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pCurrScene->GetTerrain()->GetHeight(512.f, 512.f), 512.0f));
 			for (int i = 0; i < MAX_USER; ++i)
 				m_ppOtherPlayers[i]->SetPlayerUpdatedContext(m_pCurrScene->GetTerrain());
 			m_pCamera = m_pPlayer->GetCamera();
+
+
 		}
 
 
@@ -881,7 +973,24 @@ void CGameFramework::ProcessInput()
 				printf("Error while sending packet [%d]", error_code);
 			}
 		}
+		if (pKeysBuffer['3'] & 0xF0) {
+			my_packet->type = CS_THREESTAGE;
 
+			int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
+			if (ret) {
+				int error_code = WSAGetLastError();
+				printf("Error while sending packet [%d]", error_code);
+			}
+		}
+		if (pKeysBuffer['4'] & 0xF0) {
+			my_packet->type = CS_ONESTAGE;
+
+			int ret = WSASend(g_mysocket, &send_wsabuf, 1, &iobyte, 0, NULL, NULL);
+			if (ret) {
+				int error_code = WSAGetLastError();
+				printf("Error while sending packet [%d]", error_code);
+			}
+		}
 
 		//if (pKeysBuffer['1'] & 0xF0) {
 		//	InitServer();
@@ -960,12 +1069,34 @@ void CGameFramework::ProcessInput()
 
 void CGameFramework::AnimateObjects()
 {
-	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
+	float fTimeElapsed = m_GameTimer.GetTimeElapsed(); 
+	static bool isRotate = true;
 	if (m_pPlayer)
 	{
 		m_pPlayer->Animate(fTimeElapsed);
 		m_pPlayer->GetMesh()->FBXFrameAdvance(fTimeElapsed);
+
+		m_pShadow->Animate(fTimeElapsed);
+		m_pShadow->GetMesh()->FBXFrameAdvance(fTimeElapsed);
+		//XMFLOAT3 temp_pos = { m_pPlayer->GetPosition().x, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z};
+		m_pShadow->CGameObject::SetPosition(m_pPlayer->GetPosition());
+		
+		m_pShadow->Rotate1(00.f,0.f,90.f);
+
+		
+		if (m_pPlayer->isFireMove)
+		{
+		}
+		else if (m_pPlayer->isFire)
+		{
+			XMFLOAT3 tmp = m_pPlayer->GetPosition();
+			m_pCBall->SetPosition(tmp);
+			m_pCBall->SetVisible(true);
+			m_pPlayer->isFire = false;
+		}
 	}
+	if(m_pCBall->Getvisible())
+		m_pCBall->Animate(fTimeElapsed);
 
 	for (int i = 0; i < MAX_USER; ++i)
 	{
@@ -985,13 +1116,13 @@ void CGameFramework::AnimateObjects()
 					
 	//for (int i = 0; i < m_pPlayer->m_vBullets.size(); ++i)
 	//	m_pPlayer->m_vBullets[i]->Animate(fTimeElapsed);
-	if (m_pCurrScene)
-	{
+	if (m_pCurrScene){
 		m_pCurrScene->AnimateObjects(fTimeElapsed, m_pCamera);
-		//m_pCurrScene->AnimateObjects(fTimeElapsed);
-
 	}
 	
+	//if (m_pCurrScene != m_pTitleScene)
+		//m_pEffectMgr->Animate(fTimeElapsed);
+
 }
 
 void CGameFramework::WaitForGpuComplete()
@@ -1021,8 +1152,9 @@ void CGameFramework::MoveToNextFrame()
 	}
 }
 
-//#define _WITH_PLAYER_TOP
 
+/*==============================================================*/
+//#define _WITH_PLAYER_TOP
 void CGameFramework::FrameAdvance()
 {    
 	m_GameTimer.Tick(0.0f);
@@ -1060,10 +1192,16 @@ void CGameFramework::FrameAdvance()
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 #endif
-	if (m_pPlayer != NULL)
+
+	//==========//
+	if (m_pPlayer != NULL) {
 		m_pPlayer->UpdateTransform(NULL);
-	if (m_pPlayer != NULL)
-		m_pPlayer->Render(m_pd3dCommandList,m_pCamera);
+		m_pPlayer->Render(m_pd3dCommandList, m_pCamera);
+	}
+	if (m_pShadow != NULL) {
+		m_pShadow->UpdateTransform(NULL);
+		m_pShadow->Render(m_pd3dCommandList, m_pCamera);
+	}
 
 	for (int i = 0; i < MAX_USER; ++i)
 	{
@@ -1083,6 +1221,33 @@ void CGameFramework::FrameAdvance()
 		}
 	}
 
+	if (m_ppWalls)
+	{
+		if (m_pCurrScene != m_pTitleScene)
+		{
+			for (int i = 0; i < m_nWall; ++i) {
+				//m_ppWalls[i]->Render(m_pd3dCommandList);
+			}
+		}
+	}
+
+	if (m_pWaterHeight != NULL)
+	{
+		
+		if (m_pCurrScene == m_pStageThreeScene)
+		{
+			m_pWaterHeight->UpdateShaderVariables(m_pd3dCommandList);
+			m_pWaterHeight->Render(m_pd3dCommandList, m_pCamera);
+		}
+	}
+
+	if (m_pCBall->Getvisible())
+		m_pCBall->Render(m_pd3dCommandList);
+	if (m_pCurrScene != m_pTitleScene)
+		//m_pEffectMgr->Render(m_pd3dCommandList);
+	if (m_pCurrScene != m_pTitleScene)
+		m_pUIShader->Render(m_pd3dCommandList, m_pCamera);
+	//==========//
 
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
@@ -1203,7 +1368,6 @@ void CGameFramework::ProcessPacket(char * ptr)
 			m_pPlayer->SetPosition(temp);
 			m_pPlayer->SetVisible(true);
 			m_pPlayer->SetScene(STAGE_ONE);
-			cout << temp.x << ", " << temp.z << endl;
 		}
 		else if (id < MAX_USER)
 		{
@@ -1221,13 +1385,13 @@ void CGameFramework::ProcessPacket(char * ptr)
 		else
 		{
 			XMFLOAT3 temp = { (float)my_packet->x*0.1f, 0.0, (float)my_packet->y*0.1f };
-			XMFLOAT3 newlookvector = { (float)my_packet->sight_x*0.01f, 0.0, (float)my_packet->sight_z*0.01f };
-			XMFLOAT3 currlookvector = m_ppMonsters[id - MAX_USER]->GetLook();
+			//XMFLOAT3 newlookvector = { (float)my_packet->sight_x*0.01f, 0.0, (float)my_packet->sight_z*0.01f };
+			//XMFLOAT3 currlookvector = m_ppMonsters[id - MAX_USER]->GetLook();
 			temp.y = m_pCurrScene->GetTerrain()->GetHeight(temp.x, temp.z);
 			
-			float degree = GetAngleBetweenTwoVectors2(newlookvector.x, newlookvector.z, currlookvector.x, currlookvector.z);
+			//float degree = GetAngleBetweenTwoVectors2(newlookvector.x, newlookvector.z, currlookvector.x, currlookvector.z);
 			
-			m_ppMonsters[id - MAX_USER]->Rotate(0.0, degree + 180.0, 0.0);
+			m_ppMonsters[id - MAX_USER]->Rotate(0.0, 180.0, 0.0);
 			m_ppMonsters[id - MAX_USER]->SetVisible(true);
 			m_ppMonsters[id - MAX_USER]->SetPosition(temp);
 		}
@@ -1241,8 +1405,6 @@ void CGameFramework::ProcessPacket(char * ptr)
 			XMFLOAT3 temp = { (float)my_packet->x*0.1f, 0.0,(float)my_packet->y*0.1f };
 			temp.y = m_pCurrScene->GetTerrain()->GetHeight(temp.x, temp.z);
 			m_pPlayer->SetPosition(temp);
-			cout << "x : " << temp.x << ", y : " << temp.y << endl;
-
 		}
 		else if (other_id < MAX_USER)
 		{
@@ -1263,9 +1425,18 @@ void CGameFramework::ProcessPacket(char * ptr)
 			XMFLOAT3 currlookvector = m_ppMonsters[other_id - MAX_USER]->GetLook();
 			float degree = GetAngleBetweenTwoVectors2(newlookvector.x, newlookvector.z, currlookvector.x, currlookvector.z);
 			temp.y = m_pCurrScene->GetTerrain()->GetHeight(temp.x, temp.z);
+			if (m_pCurrScene == m_pStageOneScene)
+				temp.y += 18;
 			
-			m_ppMonsters[other_id - MAX_USER]->Rotate(0.0, degree, 0.0);
-			m_ppMonsters[other_id - MAX_USER]->SetPosition(temp);
+			if ((other_id - MAX_USER) == 0) {
+				m_ppMonsters[other_id - MAX_USER]->Rotate(0.0, degree, 0.0);
+				temp.y += 80;
+				m_ppMonsters[other_id - MAX_USER]->SetPosition(temp);
+			}
+			else {
+				m_ppMonsters[other_id - MAX_USER]->Rotate(0.0, degree - 180, 0.0);
+				m_ppMonsters[other_id - MAX_USER]->SetPosition(temp);
+			}
 			m_ppMonsters[other_id - MAX_USER]->SetVisible(true);
 		}
 		break;
@@ -1292,7 +1463,9 @@ void CGameFramework::ProcessPacket(char * ptr)
 	case SC_SCENE:
 	{
 		sc_packet_scene_player * my_packet = reinterpret_cast<sc_packet_scene_player *>(ptr);
-		
+		m_pPlayer->SetPlayerUpdatedContext(m_pCurrScene->GetTerrain());
+		m_pPlayer->SetCameraUpdatedContext(m_pCurrScene->GetTerrain());
+
 		if (my_packet->scene == STAGE_ONE)
 		{
 			m_pPlayer->SetScene(STAGE_ONE);
@@ -1300,26 +1473,31 @@ void CGameFramework::ProcessPacket(char * ptr)
 			m_pCurrScene = m_pStageOneScene;
 			m_pPlayer = m_pStageOnePlayer;
 			m_pCurrScene->m_pPlayer = m_pPlayer;
-			m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pCurrScene->GetTerrain()->GetHeight(512.f, 950.f), 900.0f));
+			m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pCurrScene->GetTerrain()->GetHeight(512.f, 900.f), 900.0f));
 		
 			for (int i = 0; i < MAX_USER; ++i)
 				m_ppOtherPlayers[i]->SetPlayerUpdatedContext(m_pCurrScene->GetTerrain());
-		
+			m_ppMonsters[0]->SetVisible(true);
 			m_pCamera = m_pPlayer->GetCamera();
+
+			//m_pEffectMgr->SceneOneSet();
 		}
-		
+
 		if (my_packet->scene == STAGE_TWO)
 		{
 			m_pPlayer->SetScene(STAGE_TWO);
 			m_pCurrScene = m_pStageTwoScene;
 			m_pPlayer = m_pStageOnePlayer;
 			m_pCurrScene->m_pPlayer = m_pPlayer;
-			m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pCurrScene->GetTerrain()->GetHeight(512.f, 100.f), 100.0f));
+			m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pCurrScene->GetTerrain()->GetHeight(512.f, 512.f), 512.f));
 			
 			for (int i = 0; i < MAX_USER; ++i)
 				m_ppOtherPlayers[i]->SetPlayerUpdatedContext(m_pCurrScene->GetTerrain());
-			
+			m_ppMonsters[0]->SetVisible(false);
+			m_ppMonsters[1]->SetVisible(true);
 			m_pCamera = m_pPlayer->GetCamera();
+
+			//m_pEffectMgr->SceneTwoSet();
 		}
 
 		if (my_packet->scene == STAGE_THREE)
@@ -1328,21 +1506,26 @@ void CGameFramework::ProcessPacket(char * ptr)
 			m_pCurrScene = m_pStageThreeScene;
 			m_pPlayer = m_pStageOnePlayer;
 			m_pCurrScene->m_pPlayer = m_pPlayer;
-			m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pCurrScene->GetTerrain()->GetHeight(512.f, 100.f), 100.0f));
+			m_pPlayer->SetPosition(XMFLOAT3(512.0f, m_pCurrScene->GetTerrain()->GetHeight(512.f, 512.f), 512.f));
 
 			for (int i = 0; i < MAX_USER; ++i)
 				m_ppOtherPlayers[i]->SetPlayerUpdatedContext(m_pCurrScene->GetTerrain());
-
+			m_ppMonsters[1]->SetVisible(false);
+			m_ppMonsters[2]->SetVisible(true);
 			m_pCamera = m_pPlayer->GetCamera();
+
+			//m_pEffectMgr->SceneThreeSet();
 		}
 		break;
 	}
 	case SC_ANIM:
 	{
-		cs_packet_animation *my_packet = reinterpret_cast<cs_packet_animation *>(ptr);
+		cs_packet_npc_anim *my_packet = reinterpret_cast<cs_packet_npc_anim *>(ptr);
+		 
 		int other_id = my_packet->id;
 		if (other_id == g_myid) {
 			m_pPlayer->GetMesh()->SetAnimation(my_packet->anim_num);
+			//m_pPlayer->hp = my_packet->hp;
 		}
 		else if (other_id < MAX_USER)
 		{
@@ -1350,17 +1533,9 @@ void CGameFramework::ProcessPacket(char * ptr)
 		}
 		else
 		{
-			//XMFLOAT3 temp = { (float)my_packet->x*0.1f, 0.0, (float)my_packet->y*0.1f };
-			//XMFLOAT3 newlookvector = { (float)my_packet->sight_x*0.01f, 0.0, (float)my_packet->sight_z*0.01f };
-			//XMFLOAT3 currlookvector = m_ppMonsters[other_id - MAX_USER]->GetLook();
-			//float degree = GetAngleBetweenTwoVectors2(newlookvector.x, newlookvector.z, currlookvector.x, currlookvector.z);
-			//temp.y = m_pCurrScene->GetTerrain()->GetHeight(temp.x, temp.z);
-			//
-			//m_ppMonsters[other_id - MAX_USER]->Rotate(0.0, degree + 180.0, 0.0);
-			//m_ppMonsters[other_id - MAX_USER]->SetPosition(temp);
-			//m_ppMonsters[other_id - MAX_USER]->SetVisible(true);
 			m_ppMonsters[other_id - MAX_USER]->GetMesh()->SetAnimation(my_packet->anim_num);
 		}
+		m_pUIShader->updateHP(m_pPlayer, m_ppMonsters[other_id - MAX_USER]);
 		break;
 	}
 	default:

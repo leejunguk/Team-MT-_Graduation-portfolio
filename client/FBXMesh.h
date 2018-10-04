@@ -53,7 +53,7 @@ private:
 	int m_nFBXNowFrameNum;		// 모델이 진행중인 애니메이션의 현재 프레임 값.
 
 public:
-	CFBXMesh::CFBXMesh(ID3D12Device *pd3dDevice, char *pszFileName, float fSize, ID3D12GraphicsCommandList *pd3dCommandList);
+	CFBXMesh::CFBXMesh(ID3D12Device *pd3dDevice, char *pszFileName, float fSize, ID3D12GraphicsCommandList *pd3dCommandList,bool isshadow =false);
 	virtual ~CFBXMesh();
 
 	// 해당 프레임의 SR(Q)T 회전이 반영된 행렬을 반환

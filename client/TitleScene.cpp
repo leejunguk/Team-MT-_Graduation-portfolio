@@ -1,19 +1,19 @@
 //-----------------------------------------------------------------------------
-// File: CStageThreeScene.cpp
+// File: CTitleScene.cpp
 //-----------------------------------------------------------------------------
 
 #include "stdafx.h"
-#include "StageThreeScene.h"
+#include "TitleScene.h"
 
-CStageThreeScene::CStageThreeScene()
+CTitleScene::CTitleScene()
 {
 }
 
-CStageThreeScene::~CStageThreeScene()
+CTitleScene::~CTitleScene()
 {
 }
 
-void CStageThreeScene::BuildLightsAndMaterials()
+void CTitleScene::BuildLightsAndMaterials()
 {
 	m_pLights = new LIGHTS;
 	::ZeroMemory(m_pLights, sizeof(LIGHTS));
@@ -86,7 +86,7 @@ void CStageThreeScene::BuildLightsAndMaterials()
 	//UpdateMaterial(m_pObjectShader);
 }
 
-void CStageThreeScene::UpdateMaterial(CGameObject *pObject)
+void CTitleScene::UpdateMaterial(CGameObject *pObject)
 {
 	CMaterial *pMaterial = pObject->m_pMaterial;
 	if (pMaterial)
@@ -107,189 +107,49 @@ void CStageThreeScene::UpdateMaterial(CGameObject *pObject)
 	if (pObject->m_pChild) UpdateMaterial(pObject->m_pChild);
 }
 
-void CStageThreeScene::SetMaterial(int nIndex, MATERIAL *pMaterial)
+void CTitleScene::SetMaterial(int nIndex, MATERIAL *pMaterial)
 {
 	m_pMaterials->m_pReflections[nIndex] = *pMaterial;
 }
 
-void CStageThreeScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
+void CTitleScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
 
-	m_nTree = 20;
-	m_nCatus = 50;
-	m_nWall = 40;
+	XMFLOAT3 xmf3Scale(0.1f, 0.1f, 0.1f);
 
-	m_nObjects = m_nCatus + m_nTree + m_nWall + 1;
-	m_ppObjects = new CGameObject*[m_nObjects];
-
-	//Terrain 쓰기위한 변수 
-	XMFLOAT3 xmf3Scale(20.0f, 20.0f, 20.0f);
 	XMFLOAT4 xmf4Color(0.5f, 0.5f, 0.5f, 0.0f);
-	//
 
-#ifdef _WITH_APACHE_MODEL
-	m_ppObjects[0] = new CApacheHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	m_ppObjects[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	m_ppObjects[0]->Rotate(0.0f, 90.0f, 0.0f);
-#endif
 
 #ifdef _WITH_TERRAIN_PARTITION
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Assets/Image/Terrain/HeightMapDessert3.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color, 2);
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Assets/Image/Terrain/HeightmapTest.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color,1);
 	//테레인 위치 변경
 #else
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Assets/Image/Terrain/HeightMapDessert3.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color, 3);
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Assets/Image/Terrain/HeightmapTest.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color,1);
 	m_pTerrain->SetPosition(0, 0, 0);
 #endif
 
-#ifdef _WITH_GUNSHIP_MODEL
-	//m_ppObjects[0] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);       //Terrian 때매 y 300 +  x +50
-	//m_ppObjects[0]->SetPosition(XMFLOAT3(350.f, 400, 350.0+ 1200.f));
-	//m_ppObjects[0]->Rotate(-90.f,0.0f,0.0f);
-	//m_ppObjects[1] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[1]->SetPosition(XMFLOAT3(380.0f + 500.f, 400, 380.0f + 1200.f));
-	//m_ppObjects[1]->Rotate(-90.f, 0.0f, 0.0f);
-	//m_ppObjects[2] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[2]->SetPosition(XMFLOAT3(420.0f + 500.f, 400, 420.0f + 1200.f));
-	//m_ppObjects[2]->Rotate(-90.f, 0.0f, 0.0f);
-	//m_ppObjects[3] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[3]->SetPosition(XMFLOAT3(470.0f + 500.f, 400, 470.0f + 1200.f));
-	//m_ppObjects[3]->Rotate(-90.f, 0.0f, 0.0f);
-	//m_ppObjects[4] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[4]->SetPosition(XMFLOAT3(530.0f + 500.f, 400, 530.0f + 1200.f));
-	//m_ppObjects[4]->Rotate(-90.f, 0.0f, 0.0f);
-	int Terrianwidth = m_pTerrain->GetWidth();
-	int Terrianlength = m_pTerrain->GetLength();
-
-
-	for (int i = 0; i < m_nTree; ++i)
-	{
-		int x = rand() % Terrianwidth;
-		int y = rand() % Terrianlength;
-
-		m_ppObjects[i] = new CGunshipHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_ppObjects[i]->SetPosition(XMFLOAT3(x, m_pTerrain->GetHeight(x, y) - 50, y));
-		m_ppObjects[i]->Rotate(-90.f, 0.0f, 0.0f);
-	}
-
-	//m_ppObjects[5] = new CApacheHellicopter(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppObjects[5]->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
-	//m_ppObjects[5]->Rotate(0.0f, 90.0f, 0.0f);
-#endif
-
-	for (int i = m_nTree; i < m_nTree + m_nCatus; ++i)
-	{
-		int x = rand() % Terrianwidth;
-		int y = rand() % Terrianlength;
-
-		m_ppObjects[i] = new CCatus(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_ppObjects[i]->SetPosition(XMFLOAT3(x, m_pTerrain->GetHeight(x, y), y));
-		m_ppObjects[i]->Rotate(-90.f, 0.0f, 0.0f);
-	}
-	int looopnum = 0;
-	int looppnum2 = 0;
-	int looppnum3 = 0;
-	int	looppnum4 = 0;
-	for (int i = m_nTree + m_nCatus; i < m_nObjects; ++i)
-	{
-		int x = Terrianwidth;
-		int y = Terrianlength;
-
-		++looopnum;
-
-		m_ppObjects[i] = new CWall(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-
-		if ((m_nWall / 4) * 3 < looopnum)
-		{
-
-			++looppnum4;
-			int posY = (Terrianwidth / 10) *looppnum4;
-			m_ppObjects[i]->SetPosition(XMFLOAT3(x - Terrianwidth, m_pTerrain->GetHeight(x, posY) + 600, posY - 200));
-			m_ppObjects[i]->Rotate(-90.f, 270.0f, 00.0f);
-		}
-		else if (m_nWall / 2 < looopnum)
-		{
-
-			++looppnum3;
-			int posX = ((Terrianlength / 10) *looppnum3);
-			m_ppObjects[i]->SetPosition(XMFLOAT3(posX, m_pTerrain->GetHeight(posX, y + Terrianlength) + 1000, y - Terrianlength));
-			m_ppObjects[i]->Rotate(-90.f, 180.0f, 00.0f);
-		}
-		else if (m_nWall / 4 < looopnum)
-		{
-
-			++looppnum2;
-			int posY = (Terrianlength / 10) *looppnum2;
-			m_ppObjects[i]->SetPosition(XMFLOAT3(x, m_pTerrain->GetHeight(x, posY) + 600, posY - 200));
-			m_ppObjects[i]->Rotate(-90.f, 90.0f, 0.0f);
-		}
-
-		else
-		{
-			int posX = (Terrianwidth / 10)*looopnum;
-			m_ppObjects[i]->SetPosition(XMFLOAT3(posX, m_pTerrain->GetHeight(posX, y) + 600, y));
-			m_ppObjects[i]->Rotate(-90.f, 0.0f, 0.0f);
-		}
-
-	}
-
-
-	//예전에 있던 오브젝트 쉐이더를 이용해서 해보기.를 위해서는 Terrain 먼저 받아야 됨.
-	//CObjectsShader *pObjectShader = new CObjectsShader();
-	//pObjectShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	//pObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pTerrain);
-
-
-	//	CTreeShader *pTree = new CTreeShader();
-	//	pTree->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	//	pTree->BuildObjects(pd3dDevice, pd3dCommandList, m_pTerrain);
-
-	//	m_pTreeShader = pTree;
-
-	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 3);
+	m_nObjects = 0;
 
 	BuildLightsAndMaterials();
 
 	m_nShaders = 1;
-	//m_ppShaders = new CShader*[m_nShaders];
+	m_ppShaders = new CShader*[m_nShaders];
 
-
-	//CWaterShader *pWaterObjectShader = new CWaterShader();
-	//pWaterObjectShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	//pWaterObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, NULL);
-	//pWaterObjectShader->CreateCbvAndSrvDescriptorHeaps()
-
-	//m_ppShaders = pWaterObjectShader;
-
-
-
-
-	//m_pObjectShader = pObjectShader;
-
+	CTitleShader *pObjectShader = new CTitleShader();
+	pObjectShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
+	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Assets/Image/UI/Title.dds", 0);
+	pObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0, 0, m_pTerrain, pTexture);
+	m_ppShaders[0] = pObjectShader;
 
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	UpdateShaderVariables(pd3dCommandList);
 }
-void CStageThreeScene::ReBuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
-{
 
-	////if() 총알 트루이고 , 플레이어 포인토 받아와 서 만듬 
-	//if (isRenderBullet == true)
-	//{
-	//	BulletShader *pBulletShader = new BulletShader();
-	//	BulletCnt++;
-	//	pBulletShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	//	pBulletShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pPlayer);
-	//	m_BulletShader[BulletCnt] = pBulletShader;
-	//	isRenderBullet = false;
-	//}
-
-
-}
-
-void CStageThreeScene::ReleaseObjects()
+void CTitleScene::ReleaseObjects()
 {
 	if (m_pd3dGraphicsRootSignature) m_pd3dGraphicsRootSignature->Release();
 
@@ -310,14 +170,7 @@ void CStageThreeScene::ReleaseObjects()
 		delete[] m_ppObjects;
 	}
 
-	// 추가코드 
-//	if (m_pObjectShader)
-	{
-//		delete m_pObjectShader;
-	}
 	if (m_pTerrain) delete m_pTerrain;
-	if (m_pTreeShader) delete m_pTreeShader;
-////	if (m_pObjectShader) delete m_pObjectShader;
 	//if (m_pTmpShader) delete  m_pTmpShader;
 	//if (m_BulletShader) delete m_BulletShader;
 
@@ -333,19 +186,16 @@ void CStageThreeScene::ReleaseObjects()
 	if (m_pMaterials) delete m_pMaterials;
 }
 
-void CStageThreeScene::ReleaseUploadBuffers()
+void CTitleScene::ReleaseUploadBuffers()
 {
-	//for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
+	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 
 	for (int i = 0; i < m_nObjects; i++) m_ppObjects[i]->ReleaseUploadBuffers();
 
 	//for (int i = 0; i < BulletCnt; i++) m_BulletShader[i]->ReleaseUploadBuffers();
 
 	//추가 코드 
-	//m_pObjectShader->ReleaseUploadBuffers();
 	if (m_pTerrain) m_pTerrain->ReleaseUploadBuffers();
-	//if (m_pObjectShader) m_pObjectShader->ReleaseUploadBuffers();
-	if (m_pTreeShader) m_pTreeShader->ReleaseUploadBuffers();
 	//if (m_pTmpShader)  m_pTmpShader->ReleaseUploadBuffers();
 
 
@@ -354,7 +204,7 @@ void CStageThreeScene::ReleaseUploadBuffers()
 
 }
 
-ID3D12RootSignature *CStageThreeScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevice) //루트시그니처 두개 쓰는건 오바인가....
+ID3D12RootSignature *CTitleScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevice) //루트시그니처 두개 쓰는건 오바인가....
 {
 	ID3D12RootSignature *pd3dGraphicsRootSignature = NULL;
 
@@ -494,7 +344,7 @@ ID3D12RootSignature *CStageThreeScene::CreateGraphicsRootSignature(ID3D12Device 
 	return(pd3dGraphicsRootSignature);
 }
 
-void CStageThreeScene::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
+void CTitleScene::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
 	UINT ncbElementBytes = ((sizeof(LIGHTS) + 255) & ~255); //256의 배수
 	m_pd3dcbLights = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
@@ -507,13 +357,13 @@ void CStageThreeScene::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12Gra
 	m_pd3dcbMaterials->Map(0, NULL, (void **)&m_pcbMappedMaterials);
 }
 
-void CStageThreeScene::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
+void CTitleScene::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 {
 	::memcpy(m_pcbMappedLights, m_pLights, sizeof(LIGHTS));
 	::memcpy(m_pcbMappedMaterials, m_pMaterials, sizeof(MATERIALS));
 }
 
-void CStageThreeScene::ReleaseShaderVariables()
+void CTitleScene::ReleaseShaderVariables()
 {
 	if (m_pd3dcbLights)
 	{
@@ -527,12 +377,12 @@ void CStageThreeScene::ReleaseShaderVariables()
 	}
 }
 
-bool CStageThreeScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CTitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	return(false);
 }
 
-bool CStageThreeScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CTitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessageID)
 	{
@@ -557,28 +407,15 @@ bool CStageThreeScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, W
 	return false;
 }
 
-bool CStageThreeScene::ProcessInput(UCHAR *pKeysBuffer)
+bool CTitleScene::ProcessInput(UCHAR *pKeysBuffer)
 {
 	return(false);
 }
 
-void CStageThreeScene::AnimateObjects(float fTimeElapsed)
-{
-	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->AnimateObjects(fTimeElapsed);
-
-	for (int i = 0; i < m_nObjects - 1; i++) m_ppObjects[i]->Animate(fTimeElapsed);
-	m_ppObjects[m_nObjects - 1]->GetMesh()->FBXFrameAdvance(fTimeElapsed); // 공룡 
-
-	if (m_pLights)
-	{
-		m_pLights->m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
-		m_pLights->m_pLights[1].m_xmf3Direction = m_pPlayer->GetLookVector();
-	}
-}
 //따라 보기 추가
-void CStageThreeScene::AnimateObjects(float fTimeElapsed, CCamera *pCCamera)
+void CTitleScene::AnimateObjects(float fTimeElapsed, CCamera *pCCamera)
 {
-	//for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->AnimateObjects(fTimeElapsed, pCCamera);
+	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->AnimateObjects(fTimeElapsed, pCCamera);
 
 	for (int i = 0; i < m_nObjects; i++) m_ppObjects[i]->Animate(fTimeElapsed, pCCamera);
 
@@ -590,7 +427,7 @@ void CStageThreeScene::AnimateObjects(float fTimeElapsed, CCamera *pCCamera)
 
 }
 
-void CStageThreeScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
+void CTitleScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
 {
 	pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
 
@@ -606,12 +443,16 @@ void CStageThreeScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamer
 	pd3dCommandList->SetGraphicsRootConstantBufferView(3, d3dcbMaterialsGpuVirtualAddress); //Materials
 
 																							//추가코드
-	m_pSkyBox->Render(pd3dCommandList, pCamera);
-	m_pTerrain->Render(pd3dCommandList, pCamera);
+																							//if(m_pObjectShader)m_pObjectShader->Render(pd3dCommandList, pCamera);
+	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
+	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
+	//if (m_pTreeShader) m_pTreeShader->Render(pd3dCommandList, pCamera);
 
-	//for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
-	for (int i = 0; i < m_nObjects-1; i++) m_ppObjects[i]->UpdateTransform(NULL);
-	for (int i = 0; i < m_nObjects-1; i++) m_ppObjects[i]->Render(pd3dCommandList, pCamera);
+	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
+	for (int i = 0; i < m_nObjects; i++) m_ppObjects[i]->UpdateTransform(NULL);
+	for (int i = 0; i < m_nObjects; i++) m_ppObjects[i]->Render(pd3dCommandList, pCamera);
+
+
 
 
 

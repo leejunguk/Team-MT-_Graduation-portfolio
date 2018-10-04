@@ -4,7 +4,7 @@
 // 정욱이형 꺼
 
 
-CFBXMesh::CFBXMesh(ID3D12Device *pd3dDevice, char *pszFileName, float fSize , ID3D12GraphicsCommandList *pd3dCommandList) : CMeshIlluminatedTextured(pd3dDevice, pd3dCommandList)
+CFBXMesh::CFBXMesh(ID3D12Device *pd3dDevice, char *pszFileName, float fSize , ID3D12GraphicsCommandList *pd3dCommandList,bool isshadow) : CMeshIlluminatedTextured(pd3dDevice, pd3dCommandList)
 {
 	m_fFBXModelSize = fSize;
 	m_fFBXAnimationTime = 0.0f;
@@ -122,6 +122,26 @@ CFBXMesh::CFBXMesh(ID3D12Device *pd3dDevice, char *pszFileName, float fSize , ID
 				sToken = strtok_s(NULL, " ", &temp); m_pd3dxmtxBoneOffsets[i]._42 = stof(sToken);
 				sToken = strtok_s(NULL, " ", &temp); m_pd3dxmtxBoneOffsets[i]._43 = stof(sToken);
 				sToken = strtok_s(NULL, " ", &temp); m_pd3dxmtxBoneOffsets[i]._44 = stof(sToken);
+				if (isshadow)
+				{
+					
+					//m_pd3dxmtxBoneOffsets[i]._11 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._12 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._13 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._14 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._21 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._22 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._23 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._24 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._31 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._32 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._33 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._34 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._41 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._42 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._43 = 0;
+					//m_pd3dxmtxBoneOffsets[i]._44 = 0;
+				}
 			}
 
 			// 여기에서부터 애니메이션을 담는다.
@@ -169,6 +189,12 @@ CFBXMesh::CFBXMesh(ID3D12Device *pd3dDevice, char *pszFileName, float fSize , ID
 						pBoneAnimationData[i].m_pd3dxvQuaternion[j].z = stof(sToken);
 						sToken = strtok_s(NULL, " ", &temp);
 						pBoneAnimationData[i].m_pd3dxvQuaternion[j].w = stof(sToken);
+						if (isshadow)
+						{
+							//pBoneAnimationData[i].m_pd3dxvTranslate[j].y = 0;
+							//pBoneAnimationData[i].m_pd3dxvScale[j].z = 0;
+							//pBoneAnimationData[i].m_pd3dxvQuaternion[j].y = 0;
+						}
 					}
 				}
 				m_ppBoneAnimationData[k] = pBoneAnimationData;
@@ -176,6 +202,18 @@ CFBXMesh::CFBXMesh(ID3D12Device *pd3dDevice, char *pszFileName, float fSize , ID
 		}
 	}
 	fin.close();
+
+	if (isshadow)
+	{
+		for (int i = 0; i < m_nVertices; i++)
+		{
+			m_pd3dxvPositions[i].z = 0;
+			//m_pd3dxvPositions[i].x = 0;
+			//m_pd3dxvTexCoords[i].z = 0;
+			//m_pd3dxvBoneIndices[i].y = 0;
+			//m_pd3dxvBoneWeights[i].y = 0;
+		}
+	}
 
 	if (0 != m_nBoneCount)
 	{

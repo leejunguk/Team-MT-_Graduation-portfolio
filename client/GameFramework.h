@@ -12,13 +12,16 @@
 #include "StageTwoScene.h"
 #include "StageThreeScene.h"
 #include "Shader.h"
-
+#include "UIShader.h"
+#include "sound.h"
+#include "EffectMgr.h"
 static bool bCharaterRunFront = false;
 static bool bCharaterRunBack = false;
 static bool bCharaterRunLeft = false;
 static bool bCharaterRunRight = false;
 static bool bCharaterAttackFireStorm = false;
 
+const int damaged = 6;
 
 
 class CGameFramework
@@ -96,6 +99,9 @@ private:
 	UINT						m_nRtvDescriptorIncrementSize;
 
 	ID3D12Resource				*m_pd3dDepthStencilBuffer = NULL;
+	//static const int m_nDepthStencilBuffers = 2;
+	//ComPtr<ID3D12Resource> m_pDepthStencilBuffer[m_nDepthStencilBuffers];
+
 	ID3D12DescriptorHeap		*m_pd3dDsvDescriptorHeap = NULL;
 	UINT						m_nDsvDescriptorIncrementSize;
 
@@ -122,6 +128,7 @@ private:
 
 	CPlayer						*m_pTitlePlayer = NULL;
 	CPlayer						*m_pStageOnePlayer = NULL;
+	CPlayer						*m_pSwordPlayer = NULL;
 	CPlayer						*m_pPlayer = NULL;
 	CCamera						*m_pCamera = NULL;
 
@@ -133,8 +140,23 @@ private:
 	CPlayer							**m_ppOtherPlayers;
 	CGameObject						**m_ppMonsters;
 
+	CGameObject						**m_ppWalls;
+	UIShader						*m_pUIShader;
+
+	int								m_nWall;
 	//총알때매 추가
 	bool						m_bisFire;
 	CFireBall					*m_fireball = NULL;
+	CWaterHeightmap				*m_pWaterHeight = NULL;
+
+	SoundMgr*					soundMgr = NULL;
+
+
+	//
+	CBall						*m_pCBall;
+	int							m_nBalls = 10;
+public:
+	CEffectMgr					* m_pEffectMgr = NULL;
+	CShadow						*m_pShadow = NULL;
 };
 

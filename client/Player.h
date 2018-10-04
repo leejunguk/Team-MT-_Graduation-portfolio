@@ -17,6 +17,8 @@ struct CB_PLAYER_INFO
 
 class CPlayer : public CGameObject
 {
+public:
+	bool						isfire =false;
 protected:
 	
 	XMFLOAT3					m_xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
@@ -34,9 +36,12 @@ protected:
 	float           			m_fMaxVelocityY = 0.0f;
 	float           			m_fFriction = 0.0f;
 
+	int							m_PlayerJob = 0;
+
 	LPVOID						m_pPlayerUpdatedContext = NULL;
 	LPVOID						m_pCameraUpdatedContext = NULL;
 
+	
 	CCamera						*m_pCamera = NULL;
 	CCubeMeshDiffused     *pBulletMesh = NULL;
 
@@ -69,6 +74,19 @@ public:
 	CCamera *GetCamera() { return(m_pCamera); }
 	void SetCamera(CCamera *pCamera) { m_pCamera = pCamera; }
 
+	void SetScale(float x, float y, float z)
+	{
+		XMMATRIX mtxScale = XMMatrixScaling(x, y, z);
+		m_xmf4x4World = Matrix4x4::Multiply(mtxScale, m_xmf4x4World);
+		m_xmf4x4ToParentTransform = Matrix4x4::Multiply(mtxScale, m_xmf4x4ToParentTransform);
+	}
+	void SetRotateWorldM(float x, float y, float z)
+	{
+		XMMATRIX mtxScale = XMMatrixRotationRollPitchYaw(x, y, z);
+		m_xmf4x4World = Matrix4x4::Multiply(mtxScale, m_xmf4x4World);
+		m_xmf4x4ToParentTransform = Matrix4x4::Multiply(mtxScale, m_xmf4x4ToParentTransform);
+	}
+
 	void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
 	void Move(const XMFLOAT3& xmf3Shift, bool bVelocity = false);
 	void Move(float fxOffset = 0.0f, float fyOffset = 0.0f, float fzOffset = 0.0f);
@@ -94,6 +112,7 @@ public:
 	virtual void Animate(float fTimeElapsed);
 
 	bool isFire = false;
+	bool isFireMove = false;
 
 	//Ãß°¡
 	void CPlayer::Rotate1(float fPitch, float fYaw, float fRoll);
@@ -109,7 +128,7 @@ protected:
 class CAirplanePlayer : public CPlayer
 {
 public:
-	CAirplanePlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext=NULL, int nMeshes=1);
+	CAirplanePlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext = NULL, int nMeshes = 1, int Jobnumber = 0);
 	virtual ~CAirplanePlayer();
 
 	virtual CCamera *ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
@@ -123,7 +142,7 @@ public:
 class COtherPlayer : public CPlayer
 {
 public:
-	COtherPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext = NULL, int nMeshes = 1);
+	COtherPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext = NULL, int nMeshes = 1, int Jobnumber = 0);
 	virtual ~COtherPlayer();
 	void SceneUpdate(void *pContext); //Scene Update
 
@@ -157,6 +176,23 @@ class CTitlePlayer : public CPlayer
 public:
 	CTitlePlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext = NULL, int nMeshes = 1);
 	virtual ~CTitlePlayer();
+
+	virtual CCamera *ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
+
+	virtual void OnPlayerUpdateCallback(float fTimeElapsed);
+	virtual void OnCameraUpdateCallback(float fTimeElapsed);
+};
+
+//=======
+//=======
+class CShadow : public CPlayer
+{
+public:
+	CShadow(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext = NULL, int nMeshes = 1, int Jobnumber = 0);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
+
+	virtual ~CShadow();
+	void SceneUpdate(void *pContext); //Scene Update
 
 	virtual CCamera *ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
 

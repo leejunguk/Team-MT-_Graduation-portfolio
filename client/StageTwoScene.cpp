@@ -116,7 +116,7 @@ void CStageTwoScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsComman
 {
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
-	m_nObjects = 20;
+	m_nObjects = 1;
 	m_ppObjects = new CGameObject*[m_nObjects];
 
 	//Terrain 쓰기위한 변수 
@@ -158,7 +158,7 @@ void CStageTwoScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsComman
 	int Terrianlength = m_pTerrain->GetLength();
 
 
-	for (int i = 0; i < m_nObjects - 1; ++i)
+	for (int i = 0; i < m_nObjects; ++i)
 	{
 		int x = rand() % Terrianwidth;
 		int y = rand() % Terrianlength;
@@ -172,9 +172,6 @@ void CStageTwoScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsComman
 	//m_ppObjects[5]->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	//m_ppObjects[5]->Rotate(0.0f, 90.0f, 0.0f);
 #endif
-	m_ppObjects[m_nObjects - 1] = new CDinosour(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature); //용용이 
-	m_ppObjects[m_nObjects - 1]->SetPosition(XMFLOAT3(2050.f, m_pTerrain->GetHeight(1700.f, 1900.f), 1850.f));
-	m_ppObjects[m_nObjects - 1]->Rotate(0.0f, -90.0f, 0.0f);
 
 
 	//예전에 있던 오브젝트 쉐이더를 이용해서 해보기.를 위해서는 Terrain 먼저 받아야 됨.

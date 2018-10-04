@@ -51,14 +51,25 @@ public:
 	virtual D3D12_RASTERIZER_DESC CreateRasterizerState();
 	virtual D3D12_BLEND_DESC CreateBlendState();
 	virtual D3D12_BLEND_DESC CreateAlphaBlendState();
+	virtual D3D12_BLEND_DESC CreateNoneAlphaBlendState();
 	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState();
+	virtual D3D12_RASTERIZER_DESC CreateNoneDepthclipRasterizerState();
 
 	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob **ppd3dShaderBlob);
 	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob **ppd3dShaderBlob);
 	D3D12_SHADER_BYTECODE CompileShaderFromFile(WCHAR *pszFileName, LPCSTR pszShaderName, LPCSTR pszShaderProfile, ID3DBlob **ppd3dShaderBlob);
 
 	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual void CreateAlphaBlendingNoneDepthShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual void CreateAlphaBlendingNoneMaskShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
 	virtual void CreateAlphaBlendingShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual void CreateAlphaBlendingWaterShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual D3D12_BLEND_DESC CreateWaterAlphaBlendState(); //08.04추가
+	//virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateNoneDepthStencilState();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateNoneMaskDepthStencilState();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateWaterDepthStencilState(); //08.04추가
+	virtual D3D12_RASTERIZER_DESC CreateWaterRasterizerState();
 	void CreateCbvAndSrvDescriptorHeaps(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, int nConstantBufferViews, int nShaderResourceViews);
 	void CreateConstantBufferViews(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, int nConstantBufferViews, ID3D12Resource *pd3dConstantBuffers, UINT nStride);
 	void CreateShaderResourceViews(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, CTexture *pTexture, UINT nRootParameterStartIndex, bool bAutoIncrement);
@@ -230,6 +241,21 @@ public:
 	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob **ppd3dShaderBlob);
 
 };
+class CNONDepthShader : public CTexturedShader
+{
+public:
+	CNONDepthShader();
+	virtual ~CNONDepthShader();
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+
+	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
+
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob **ppd3dShaderBlob);
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob **ppd3dShaderBlob);
+
+};
+
 
 // WaterShader
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -290,6 +316,32 @@ public:
 	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
 	virtual void CreateAlphaBlendingShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
 };
+//////////////////////////////////////
+class CTerrainWaterShader : public CTexturedShader
+{
+public:
+	ID3D12Resource					*m_pd3dcbGameObjects = NULL;
+	CB_GAMEOBJECT_INFO				*m_pcbMappedGameObjects = NULL;
+	int								m_nObjects = 0;
+	XMFLOAT4X4						m_xmf4x4TexTransform;
+public:
+	CTerrainWaterShader();
+	virtual ~CTerrainWaterShader();
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob **ppd3dShaderBlob);
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob **ppd3dShaderBlob);
+
+	virtual void CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void UpdateShaderVariables();
+	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual void CreateAlphaBlendingShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual void CreateAlphaBlendingWaterShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -379,57 +431,38 @@ protected:
 };
 
 
-//UISHADER
+//Effect
+//=================================================================================
 
-//////////////////////UI오브젝트
-#define NUM_MAX_UITEXTURE 2
-
-
-
-class UIShaders : public CShader
+class CEffectShader : public CTexturedShader
 {
 public:
-	UIShaders();
-	~UIShaders();
+	CEffectShader();
+	virtual ~CEffectShader();
 
-public:
-	virtual D3D12_BLEND_DESC			CreateBlendState(int index = 0);
-	virtual D3D12_DEPTH_STENCIL_DESC	CreateDepthStencilState(int index = 0);
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 
-	virtual void Animate(float fTimeElapsed);
-	virtual void SetPos(XMFLOAT2* pos, UINT index = 0) { m_pUIObjects[index]->m_xmf2ScreenPos = *pos; }
-	virtual void SetScale(XMFLOAT2* scale, UINT index = 0) { m_pUIObjects[index]->m_xmf2Scale = *scale; }
-	virtual void CreateGraphicsRootSignature(ID3D12Device *pd3dDevice);
-	virtual void CreateCollisionBox();
-	virtual void CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
-	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
-	virtual void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, int nRenderTargets = 1, void *pContext = NULL);
-	virtual void ReleaseObjects() { }
-	virtual void OnPrepareRender(ID3D12GraphicsCommandList *pd3dCommandList, int index = 0);
-	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
 
-	virtual XMUINT2 GetSpriteSize(const int texIndex, CTexture* pTexture, XMUINT2& numSprite = XMUINT2(1, 1));
-
-protected:
-	unique_ptr<UploadBuffer<CB_UI_INFO>>	m_ObjectCB = nullptr;
-	std::vector<UIObject*>					m_pUIObjects;
-
-	int											m_nObjects = 0;
-	ID3D12Resource						*m_pd3dcbUIObjects = NULL;
-	CB_GAMEOBJECT_INFO			*m_pcbMappedUIObjects = NULL;
-
-#ifdef _WITH_BATCH_MATERIAL
-	CMaterial						*m_pMaterial = NULL;
-#endif
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob **ppd3dShaderBlob);
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob **ppd3dShaderBlob);
 
 };
 
-class UIHPBarShaders : public UIShaders
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+class CShadowShader : public CShader
 {
 public:
-	UIHPBarShaders() { };
-	~UIHPBarShaders() { };
+	CShadowShader();
+	virtual ~CShadowShader();
+	//virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob **ppd3dShaderBlob);
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob **ppd3dShaderBlob);
 
-public:
-	virtual void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, int nRenderTargets = 1, void *pContext = NULL);
+	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+

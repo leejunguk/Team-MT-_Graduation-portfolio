@@ -79,8 +79,10 @@ public:
 
 	int GetTextureCount() { return(m_nTextures); }
 	ID3D12Resource *GetTexture(int nIndex) { return(m_ppd3dTextures[nIndex]); }
-	UINT GetTextureType(int index) { return(m_nTextureType); }
+	UINT GetTextureType() { return(m_nTextureType); }
 	UINT GetTextureType_origin() { return(m_nTextureType); }
+
+	SRVROOTARGUMENTINFO& GetArgumentInfos(UINT nIndex) { return m_pRootArgumentInfos[nIndex]; }
 
 	void ReleaseUploadBuffers();
 };
@@ -122,6 +124,8 @@ class CGameObject
 public:
 	CGameObject(int nMeshes=1);
 	virtual ~CGameObject();
+
+	int hp;
 
 private:
 	int								m_nReferences = 0;
@@ -201,12 +205,23 @@ public:
 	void SetLocalPosition(XMFLOAT3 xmf3Position);
 	void SetScale(float x, float y, float z);
 	void SetLocalScale(float x, float y, float z);
+	void SetScaleWorldM(float x, float y, float z)
+	{
+		XMMATRIX mtxScale = XMMatrixScaling(x, y, z);
+		m_xmf4x4World = Matrix4x4::Multiply(mtxScale, m_xmf4x4World);
+		//m_xmf4x4ToParentTransform = Matrix4x4::Multiply(mtxScale, m_xmf4x4ToParentTransform);
+	}
 
 	void MoveStrafe(float fDistance = 1.0f);
 	void MoveUp(float fDistance = 1.0f);
 	void MoveForward(float fDistance = 1.0f);
 
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
+	void RotateWorldM(float fPitch, float fYaw, float fRoll)
+	{
+		XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
+		m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
+	}
 	void Rotate(XMFLOAT3 *pxmf3Axis, float fAngle);
 	void Rotate(XMFLOAT4 *pxmf4Quaternion);
 
@@ -223,6 +238,8 @@ public:
 
 	void LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, wifstream& InFile, UINT nFrame);
 	void LoadGeometryFromFile(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, TCHAR *pstrFileName);
+	void LoadGeometryFromShadowFBXMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, char *pstrFileName);
+	
 	//dx11보고 fbx로 mesh를 바꿈 
 	void LoadGeometryFromFBXMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, char *pstrFileName);
 	//LoadGeometryFromFile 카피 FBX 
@@ -344,12 +361,70 @@ public:
 	CGameObject					*m_pHellfileMissileFrame = NULL;
 };
 
+//08.06선인장 추가 
+class CCatus : public CGameObject
+{
+public:
+	CCatus(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual ~CCatus();
+
+	virtual void Animate(float fTimeElapsed);
+
+	//CGameObject					*m_pRotorFrame = NULL;
+	//CGameObject					*m_pBackRotorFrame = NULL;
+	//CGameObject					*m_pHellfileMissileFrame = NULL;
+};
+
+//벽추가 
+class CWall : public CGameObject
+{
+public:
+	CWall(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual ~CWall();
+
+	virtual void Animate(float fTimeElapsed);
+
+	//CGameObject					*m_pRotorFrame = NULL;
+	//CGameObject					*m_pBackRotorFrame = NULL;
+	//CGameObject					*m_pHellfileMissileFrame = NULL;
+};
+
+//////////////////////////////////////////////////////////////////Terrian 추가
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CWaterHeightmap : public CGameObject
+{
+public:
+	CWaterHeightmap(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, LPCTSTR pFileName, int nWidth, int nLength, int nBlockWidth, int nBlockLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color);
+	virtual ~CWaterHeightmap();
+
+private:
+	CHeightMapImage				*m_pHeightMapImage;
+
+	int							m_nWidth;
+	int							m_nLength;
+
+	XMFLOAT3					m_xmf3Scale;
+
+public:
+	float GetHeight(float x, float z, bool bReverseQuad = false) { return(m_pHeightMapImage->GetHeight(x, z, bReverseQuad) * m_xmf3Scale.y); } //World
+	XMFLOAT3 GetNormal(float x, float z) { return(m_pHeightMapImage->GetHeightMapNormal(int(x / m_xmf3Scale.x), int(z / m_xmf3Scale.z))); }
+
+	int GetHeightMapWidth() { return(m_pHeightMapImage->GetHeightMapWidth()); }
+	int GetHeightMapLength() { return(m_pHeightMapImage->GetHeightMapLength()); }
+
+	XMFLOAT3 GetScale() { return(m_xmf3Scale); }
+	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }
+	float GetLength() { return(m_nLength * m_xmf3Scale.z); }
+};
+//////////////////////////////////////
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 class CDinosour : public CGameObject
 {
 public:
-	CDinosour(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	CDinosour(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature , int Scene);
 	virtual ~CDinosour();
 
 	virtual void Animate(float fTimeElapsed);
@@ -407,92 +482,71 @@ public:
 };
 
 
-//////////////////////UI오브젝트
-
-//UI CB
-struct CB_UI_INFO {
-	XMFLOAT2  m_xmf2ScreenPos;
-	XMFLOAT2  m_xmf2ScreenSize;
-
-	XMUINT2	 m_nNumSprite;
-	XMUINT2	 m_nNowSprite;
-
-	XMUINT2  m_nSize;
-	UINT	 m_nTexType;
-	float	 m_fData;
-
-	XMFLOAT2 m_xmf2Scale;
-	float    m_fdump1 = 0;
-	float    m_fdump2 = 0;
-};
 
 
-
-class UIObject
+//////////////////////Effet오브젝트
+//=============================================
+class CBall : public CGameObject
 {
 public:
-	UIObject();
-	~UIObject();
+	CBall(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual ~CBall();
+	void SetScale(float x, float y, float z)
+	{
+		XMMATRIX mtxScale = XMMatrixScaling(x, y, z);
+		m_xmf4x4World = Matrix4x4::Multiply(mtxScale, m_xmf4x4World);
+		//m_xmf4x4ToParentTransform = Matrix4x4::Multiply(mtxScale, m_xmf4x4ToParentTransform);
+	}
+	virtual void Animate(float fTimeElapsed);
 
-public:
-	void SetCbvGPUDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE d3dCbvGPUDescriptorHandle) { m_d3dCbvGPUDescriptorHandle = d3dCbvGPUDescriptorHandle; }
-	void SetCbvGPUDescriptorHandlePtr(UINT64 nCbvGPUDescriptorHandlePtr) { m_d3dCbvGPUDescriptorHandle.ptr = nCbvGPUDescriptorHandlePtr; }
-
-	D3D12_GPU_DESCRIPTOR_HANDLE GetCbvGPUDescriptorHandle() { return(m_d3dCbvGPUDescriptorHandle); }
-
-	virtual void Update(float fTimeElapsed) {};
-
-	virtual void SetRootParameter(ID3D12GraphicsCommandList *pd3dCommandList);
-	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList);
-	virtual bool CollisionUI(POINT* pPoint, float trueSetData, float falseSetData = 0.0f);
-	virtual void BuildMaterials(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList) { }
-	virtual void CreateCollisionBox();
-	virtual void SetScreenSize(XMFLOAT2& size);
-	virtual void SetPosition(XMFLOAT2& pos);
-	virtual void SetScale(XMFLOAT2& scale);
-	virtual void SetSize(XMUINT2& size);
-	virtual void SetNumSprite(XMUINT2& numSprite, XMUINT2& nowSprite);
-
-	virtual void SetType(UINT type) { m_nTexType = type; }
-
-public:
-
-	bool										m_bEnabled;
-	float										m_fAnimationTime;
-	D3D12_GPU_DESCRIPTOR_HANDLE					m_d3dCbvGPUDescriptorHandle;
-
-	XMFLOAT2	m_xmf2ScreenPos;
-	XMFLOAT2	m_xmf2ScreenSize;
-
-	XMUINT2		m_nNumSprite;
-	XMUINT2		m_nNowSprite;
-
-	XMUINT2		m_nSize;
-	UINT		m_nTexType;
-	float		m_fData = 0.0f;
-
-	XMFLOAT2	m_xmf2Scale = XMFLOAT2(1.0f, 1.0f);
-	XMFLOAT2	m_xmf2StartPos;
-	XMFLOAT2	m_xmf2EndPos;
 };
-
-class HPBarObject : public UIObject
+//weather
+//=============================================
+class CRainobj : public CGameObject
 {
 public:
-	HPBarObject() {};
-	~HPBarObject() {};
-
+	CRainobj(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual ~CRainobj();
+	virtual ID3D12Resource *CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void Animate(float fTimeElapsed);
 public:
-//	void SetPlayerStatus(Status* pPlayerStatus);
-
-	virtual void Update(float fTimeElapsed);
-
-protected:
-//	Status * m_pPlayerStatus;
-
-	float m_fMaxHP;		// 최대 HP
-	float m_fLerpHP;	// 
-
-	float m_fLerpTime;
+	float							 m_CurrentTime = 0.f;
+	XMFLOAT3						m_speed;
 };
+class CSnowobj : public CGameObject
+{
+public:
+	CSnowobj(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual ~CSnowobj();
+	virtual ID3D12Resource *CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void Animate(float fTimeElapsed);
+public:
+	float							 m_CurrentTime = 0.f;
+	XMFLOAT3						m_speed;
+};
+
+
+//=============================================
+class CDamagedParticle : public CGameObject
+{
+public:
+	CDamagedParticle(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
+	virtual ~CDamagedParticle();
+	virtual ID3D12Resource *CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void Animate(float fTimeElapsed);
+public:
+	void SetForce(float x, float y, float z);
+
+	//////
+public:
+	float							 m_CurrentTime = 0.f;
+	XMFLOAT3						m_Force;
+};
+
 

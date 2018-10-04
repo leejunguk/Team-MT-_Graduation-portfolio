@@ -172,7 +172,7 @@ void CStageOneScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsComman
 	//m_ppObjects[5]->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	//m_ppObjects[5]->Rotate(0.0f, 90.0f, 0.0f);
 #endif
-	m_ppObjects[m_nObjects - 1] = new CDinosour(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature); //용용이 
+	m_ppObjects[m_nObjects - 1] = new CDinosour(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 0); //용용이 
 	m_ppObjects[m_nObjects - 1]->SetPosition(XMFLOAT3(2050.f, m_pTerrain->GetHeight(1700.f, 1900.f), 1850.f));
 	m_ppObjects[m_nObjects - 1]->Rotate(0.0f, -90.0f, 0.0f);
 
@@ -199,41 +199,10 @@ void CStageOneScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsComman
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 
-	BuildUI(pd3dDevice, pd3dCommandList);
+	//BuildUI(pd3dDevice, pd3dCommandList);
 }
 
 
-void CStageOneScene::BuildUI(ID3D12Device * pDevice, ID3D12GraphicsCommandList * pCommandList)
-{
-	m_ppUIShaders.clear();
-	m_nUIShaders = 1;
-	m_ppUIShaders.resize(m_nUIShaders);
-	
-	UIHPBarShaders* pHPBar = new UIHPBarShaders();
-	pHPBar->BuildObjects(pDevice, pCommandList, 1, 0);
-	m_ppUIShaders[0] = pHPBar;
-	//UIMiniMapShaders* pMinimap = new UIMiniMapShaders();
-	//pMinimap->SetNumObject(21);
-	//pMinimap->BuildObjects(pDevice, pCommandList, 1);
-	//m_ppUIShaders[1] = pMinimap;
-
-	//vector<TextureDataForm> texutredata(2);
-	//texutredata[0].m_texture = L"res\\Texture\\PauseGame.DDS";
-	//m_pPauseScreen = new TextureToFullScreen();
-	//m_pPauseScreen->BuildObjects(pDevice, pCommandList, 1, &texutredata[0]);
-
-	//texutredata[1].m_texture = L"res\\Texture\\Back.DDS";
-	//texutredata[0].m_texture = L"res\\Texture\\BackToMainMenu.DDS";
-
-	//m_pButtons = new UIButtonShaders();
-	//m_pButtons->BuildObjects(pDevice, pCommandList, 2, &texutredata);
-	//m_pButtons->SetPoint(m_pCursorPos);
-	//m_pButtons->SetPos(new XMFLOAT2(640.0f, 720.0f - 407.3f), 0);
-	//m_pButtons->SetPos(new XMFLOAT2(870.0f, 720.0f - 455.0f), 1);
-	//m_pButtons->SetScale(new XMFLOAT2(1.0f, 1.0f), 0);
-	//m_pButtons->SetScale(new XMFLOAT2(1.0f, 1.0f), 1);
-	//m_pButtons->CreateCollisionBox();
-}
 
 
 void CStageOneScene::ReBuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
@@ -557,8 +526,8 @@ void CStageOneScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera 
 	m_pTerrain->Render(pd3dCommandList, pCamera);
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
-	for (int i = 0; i < m_nObjects; i++) m_ppObjects[i]->UpdateTransform(NULL);
-	for (int i = 0; i < m_nObjects; i++) m_ppObjects[i]->Render(pd3dCommandList, pCamera);
+	for (int i = 0; i < m_nObjects-1; i++) m_ppObjects[i]->UpdateTransform(NULL);
+	for (int i = 0; i < m_nObjects-1; i++) m_ppObjects[i]->Render(pd3dCommandList, pCamera);
 
 
 	//for (UINT i = 0; i < m_nUIShaders; ++i)
@@ -566,15 +535,3 @@ void CStageOneScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera 
 }
 
 
-void CStageOneScene::RenderUI(ID3D12Device * pDevice, ID3D12GraphicsCommandList * pCommandList)
-{
-	for (UINT i = 0; i < m_nUIShaders; ++i)
-		m_ppUIShaders[i]->Render(pCommandList);
-
-	//if (!m_bMouseCapture) {
-	//	m_pPauseScreen->Render(pCommandList, m_Camera.get());
-	//	m_pButtons->Render(pCommandList);
-	//}
-	////페이트 INOUT 랜더링
-	//m_pFadeEffectShader->Render(pCommandList, m_Camera.get());
-}

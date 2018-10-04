@@ -148,6 +148,7 @@ CGameObject::CGameObject(int nMeshes)
 		m_ppMeshes = new CMesh*[m_nMeshes];
 		for (int i = 0; i < m_nMeshes; i++)	m_ppMeshes[i] = NULL;
 	}
+	hp = 100;
 }
 
 CGameObject::~CGameObject()
@@ -705,6 +706,16 @@ void CGameObject::LoadGeometryFromFBXMesh(ID3D12Device *pd3dDevice, ID3D12Graphi
 
 
 }
+void CGameObject::LoadGeometryFromShadowFBXMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, char *pstrFileName)
+{
+	//m
+	CMesh *TestMesh = new CFBXMesh(pd3dDevice, pstrFileName, 10.0f, pd3dCommandList,true);
+	if (TestMesh)
+		SetMesh(0, TestMesh);
+
+
+
+}
 
 
 
@@ -844,14 +855,25 @@ void CApacheHellicopter::Animate(float fTimeElapsed)
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-CDinosour::CDinosour(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
+CDinosour::CDinosour(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, int i)
 {
+	if (i == 0)
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/Allosaurus.data");
+	else if (i == 1)
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/RockWarrior.data");
+	else
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/Boss_SCORPION_DIFFUSE.data");
 
-	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "OneBoss.data");
 	//texture 추가 ===========================================================================05.05
 	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 	TCHAR pstrPathName[64] = { '\0' };
-	_tcscat_s(pstrPathName, 128, _T("OneBoss.dds"));
+	if (i == 0)
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/diffuse.dds"));
+	else if (i == 1)
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/RockWarrior.dds"));
+	else
+		_tcscat_s(pstrPathName, 128, _T("Assets/Model/Boss_SCORPION_DIFFUSE.dds"));
+
 	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
 
 
@@ -877,8 +899,21 @@ CDinosour::CDinosour(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCo
 	pMaterial->SetShader(pShader);
 	if (pMaterial) SetMaterial(pMaterial);
 
-	SetScale(4.0f, 4.0f, 4.0f);
-	Rotate(0, 180, 0);
+	if (i == 0) {
+		XMFLOAT3 pos = {2500, 80, 2500};
+		SetPosition(pos);
+		SetScale(1.0f, 1.0f, 1.0f);
+		Rotate(0, 180, 0);
+	}
+	else if (i == 1) {
+		Rotate(0, 180, 0);
+		SetScale(100.0f, 100.0f, 100.0f);
+	}
+	else {
+		Rotate(0, 180, 0);
+		SetScale(1.5f, 1.5, 1.5f);
+	}
+
 }
 
 CDinosour::~CDinosour()
@@ -892,6 +927,140 @@ void CDinosour::Animate(float fTimeElapsed)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+CCatus::CCatus(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
+{
+	//LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"../Assets/Model/Gunship.txt");
+	static char Catuscnt = 0;
+	Catuscnt++;
+	//m_pRotorFrame = FindFrame(_T("Rotor"));
+	//m_pBackRotorFrame = FindFrame(_T("Back_Rotor"));
+
+	//m_pHellfileMissileFrame = FindFrame(_T("Hellfire_Missile"));
+	////if (m_pHellfileMissileFrame) //m_pHellfileMissileFrame->m_bActive = false;
+
+	//SetScale(5.0f, 5.0f, 5.0f);
+	//Rotate(0.0f, 0.0f, 0.0f);
+
+	if (Catuscnt % 3 == 0)
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/CactusShort03.data");
+	else if (Catuscnt % 3 == 1)
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/CactusShort02.data");
+	else
+		LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/CactusShort01.data");
+
+
+	//texture 추가 ===========================================================================05.05
+	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	TCHAR pstrPathName[64] = { '\0' };
+	_tcscat_s(pstrPathName, 128, _T("Assets/Model/CatusPack1.dds"));
+	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+
+
+	CMaterial *pMaterial = NULL;
+	pMaterial = new CMaterial();
+	//pMaterial->m_xmf4Albedo = xmf4MaterialAlbedo;
+
+	pMaterial->SetTexture(pTexture);
+
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
+
+	ID3D12Resource *pd3dcbResource = CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CNONAnimateShader *pShader = new CNONAnimateShader();
+	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	pShader->CreateCbvAndSrvDescriptorHeaps(pd3dDevice, pd3dCommandList, 1, 1);
+	pShader->CreateConstantBufferViews(pd3dDevice, pd3dCommandList, 1, pd3dcbResource, ncbElementBytes);
+	pShader->CreateShaderResourceViews(pd3dDevice, pd3dCommandList, pTexture, 5, true);
+
+	SetCbvGPUDescriptorHandle(pShader->GetGPUCbvDescriptorStartHandle());
+
+	pMaterial->SetShader(pShader);
+	if (pMaterial) SetMaterial(pMaterial);
+
+}
+
+CCatus::~CCatus()
+{
+}
+
+void CCatus::Animate(float fTimeElapsed)
+{
+	//if (m_pHellfileMissileFrame->m_bActive ==true)
+	//{
+	//	//에니메이션 추가코드
+	//	//GetLook();
+	//	
+	//	XMMATRIX xmmtranslate = XMMatrixTranslation(0,0, 5.0f * fTimeElapsed);
+	//	m_pHellfileMissileFrame->m_xmf4x4ToParentTransform = Matrix4x4::Multiply(xmmtranslate, m_pHellfileMissileFrame->m_xmf4x4ToParentTransform);
+	//}
+}
+
+CWall::CWall(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
+{
+	//LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"../Assets/Model/Gunship.txt");
+	//static char Catuscnt = 0;
+	//Catuscnt++;
+	//m_pRotorFrame = FindFrame(_T("Rotor"));
+	//m_pBackRotorFrame = FindFrame(_T("Back_Rotor"));
+
+	//m_pHellfileMissileFrame = FindFrame(_T("Hellfire_Missile"));
+	////if (m_pHellfileMissileFrame) //m_pHellfileMissileFrame->m_bActive = false;
+
+	//SetScale(5.0f, 5.0f, 5.0f);
+	//Rotate(0.0f, 0.0f, 0.0f);
+
+
+	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/Wall2.data");
+
+
+
+	//texture 추가 ===========================================================================05.05
+	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	TCHAR pstrPathName[64] = { '\0' };
+	_tcscat_s(pstrPathName, 128, _T("Assets/Model/WallSand1.dds"));
+	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+
+
+	CMaterial *pMaterial = NULL;
+	pMaterial = new CMaterial();
+	//pMaterial->m_xmf4Albedo = xmf4MaterialAlbedo;
+
+	pMaterial->SetTexture(pTexture);
+
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
+
+	ID3D12Resource *pd3dcbResource = CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CNONDepthShader *pShader = new CNONDepthShader();
+	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	pShader->CreateCbvAndSrvDescriptorHeaps(pd3dDevice, pd3dCommandList, 1, 1);
+	pShader->CreateConstantBufferViews(pd3dDevice, pd3dCommandList, 1, pd3dcbResource, ncbElementBytes);
+	pShader->CreateShaderResourceViews(pd3dDevice, pd3dCommandList, pTexture, 5, true);
+
+	SetCbvGPUDescriptorHandle(pShader->GetGPUCbvDescriptorStartHandle());
+
+	pMaterial->SetShader(pShader);
+	if (pMaterial) SetMaterial(pMaterial);
+
+}
+
+CWall::~CWall()
+{
+}
+
+void CWall::Animate(float fTimeElapsed)
+{
+	//if (m_pHellfileMissileFrame->m_bActive ==true)
+	//{
+	//	//에니메이션 추가코드
+	//	//GetLook();
+	//	
+	//	XMMATRIX xmmtranslate = XMMatrixTranslation(0,0, 5.0f * fTimeElapsed);
+	//	m_pHellfileMissileFrame->m_xmf4x4ToParentTransform = Matrix4x4::Multiply(xmmtranslate, m_pHellfileMissileFrame->m_xmf4x4ToParentTransform);
+	//}
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -907,11 +1076,11 @@ CGunshipHellicopter::CGunshipHellicopter(ID3D12Device *pd3dDevice, ID3D12Graphic
 
 	//SetScale(5.0f, 5.0f, 5.0f);
 	//Rotate(0.0f, 0.0f, 0.0f);
-	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Maple4069.data");
+	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/Maple4069.data");
 	//texture 추가 ===========================================================================05.05
 	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 	TCHAR pstrPathName[64] = { '\0' };
-	_tcscat_s(pstrPathName, 128, _T("Klen-Bark.dds"));
+	_tcscat_s(pstrPathName, 128, _T("Assets/Model/Klen-Bark.dds"));
 	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
 
 
@@ -972,7 +1141,7 @@ CFlyerShip::CFlyerShip(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3d
 {
 	//LoadGeometryFromFBX(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"../Assets/Model/spider.txt");
 	//LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"../Assets/Model/Flyer.txt");
-	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature,"../Allosaurus_Default.data");
+	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature,"../Assets/Model/Allosaurus_Default.data");
 }
 
 CFlyerShip::~CFlyerShip()
@@ -1060,6 +1229,73 @@ CHeightMapTerrain::~CHeightMapTerrain(void)
 
 //WaterHeightmap //////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//WaterHeightmap //////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+CWaterHeightmap::CWaterHeightmap(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, LPCTSTR pFileName, int nWidth, int nLength, int nBlockWidth, int nBlockLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color) : CGameObject(0)
+{
+	m_nWidth = nWidth;
+	m_nLength = nLength;
+
+	int cxQuadsPerBlock = nBlockWidth - 1;
+	int czQuadsPerBlock = nBlockLength - 1;
+
+	m_xmf3Scale = xmf3Scale;
+
+	m_pHeightMapImage = new CHeightMapImage(pFileName, nWidth, nLength, xmf3Scale);
+
+	long cxBlocks = (m_nWidth - 1) / cxQuadsPerBlock;
+	long czBlocks = (m_nLength - 1) / czQuadsPerBlock;
+
+	m_nMeshes = cxBlocks * czBlocks;
+	m_ppMeshes = new CMesh*[m_nMeshes];
+	for (int i = 0; i < m_nMeshes; i++)	m_ppMeshes[i] = NULL;
+
+	CHeightMapGridMesh *pHeightMapGridMesh = NULL;
+	for (int z = 0, zStart = 0; z < czBlocks; z++)
+	{
+		for (int x = 0, xStart = 0; x < cxBlocks; x++)
+		{
+			xStart = x * (nBlockWidth - 1);
+			zStart = z * (nBlockLength - 1);
+			pHeightMapGridMesh = new CHeightMapGridMesh(pd3dDevice, pd3dCommandList, xStart, zStart, nBlockWidth, nBlockLength, xmf3Scale, xmf4Color, m_pHeightMapImage);
+			SetMesh(x + (z*cxBlocks), pHeightMapGridMesh);
+		}
+	}
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CTexture *pTerrainTexture = new CTexture(2, RESOURCE_TEXTURE2D, 0);
+
+	pTerrainTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Assets/Image/Terrain/Water_Detail_Texture_0.dds", 0);
+	pTerrainTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Assets/Image/Terrain/water7.dds", 1);
+
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255); //256의 배수
+
+	CTerrainWaterShader *pWaterShader = new CTerrainWaterShader();
+	pWaterShader->CreateAlphaBlendingWaterShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pWaterShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	pWaterShader->CreateCbvAndSrvDescriptorHeaps(pd3dDevice, pd3dCommandList, 1, 2);
+	pWaterShader->CreateConstantBufferViews(pd3dDevice, pd3dCommandList, 1, m_pd3dcbGameObject, ncbElementBytes);
+	pWaterShader->CreateShaderResourceViews(pd3dDevice, pd3dCommandList, pTerrainTexture, 6, true);
+
+	//pTerrainShader->CreateInputLayout();
+
+	CMaterial *pTerrainMaterial = new CMaterial();
+	pTerrainMaterial->SetTexture(pTerrainTexture);
+
+	SetMaterial(pTerrainMaterial);
+
+	SetCbvGPUDescriptorHandle(pWaterShader->GetGPUCbvDescriptorStartHandle());
+
+	SetShader(pWaterShader);
+}
+
+CWaterHeightmap::~CWaterHeightmap(void)
+{
+	if (m_pHeightMapImage) delete m_pHeightMapImage;
+}
+
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
@@ -1165,96 +1401,389 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 
 
-//////////////////////////////////////////////////
+/////////////////////////////////////////
 
-
-
-UIObject::UIObject()
+CBall::CBall(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
 {
+
+	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/circlecolum.data");
+	//texture 추가 ===========================================================================05.05
+	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	TCHAR pstrPathName[64] = { '\0' };
+	_tcscat_s(pstrPathName, 128, _T("Assets/Model/reversefirewalleffect.dds"));
+	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+
+
+	CMaterial *pMaterial = NULL;
+	pMaterial = new CMaterial();
+	//pMaterial->m_xmf4Albedo = xmf4MaterialAlbedo;
+
+	pMaterial->SetTexture(pTexture);
+
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
+
+	ID3D12Resource *pd3dcbResource = CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CNONAnimateShader *pShader = new CNONAnimateShader();
+	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	pShader->CreateCbvAndSrvDescriptorHeaps(pd3dDevice, pd3dCommandList, 1, 1);
+	pShader->CreateConstantBufferViews(pd3dDevice, pd3dCommandList, 1, pd3dcbResource, ncbElementBytes);
+	pShader->CreateShaderResourceViews(pd3dDevice, pd3dCommandList, pTexture, 5, true);
+
+	SetCbvGPUDescriptorHandle(pShader->GetGPUCbvDescriptorStartHandle());
+
+	SetScale(0.5f, 0.5f, 0.5f);
+	pMaterial->SetShader(pShader);
+	if (pMaterial) SetMaterial(pMaterial);
+
 }
 
-UIObject::~UIObject()
+CBall::~CBall()
 {
+
 }
 
-void UIObject::SetRootParameter(ID3D12GraphicsCommandList * pd3dCommandList)
+void CBall::Animate(float fTimeElapsed)
 {
-	pd3dCommandList->SetGraphicsRootDescriptorTable(0, m_d3dCbvGPUDescriptorHandle);
+	//if (m_pRotorFrame)
+	//{
+	//   XMMATRIX xmmtxRotate = XMMatrixRotationY(XMConvertToRadians(360.0f * 3.0f) * fTimeElapsed);
+	//   m_pRotorFrame->m_xmf4x4ToParentTransform = Matrix4x4::Multiply(xmmtxRotate, m_pRotorFrame->m_xmf4x4ToParentTransform);
+	//}
+	//m_xmf4x4World.x
+	//m_xmf4x4ToParentTransform._41 = x;
+	//   m_xmf4x4ToParentTransform._42 = y;
+	//   m_xmf4x4ToParentTransform._43 = z;
+
+
+	//m_xmf4x4World._41 = x;
+	//m_xmf4x4World._42 = y;
+	//m_xmf4x4World._43 = z;
+	XMMATRIX mtxRotate = XMMatrixRotationY(XMConvertToRadians(360.0f * 0.5f) * fTimeElapsed);
+	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
+
+	//XMMATRIX mtxTranslation = XMMatrixTranslation(m_xmf4x4World._41, m_xmf4x4World._42, 0.00001f *fTimeElapsed + m_xmf4x4World._43);
+	//m_xmf4x4World = Matrix4x4::Multiply(m_xmf4x4World, mtxTranslation);
+
+	//XMMATRIX mtxParentsTranslation = XMMatrixTranslation(m_xmf4x4ToParentTransform._41, m_xmf4x4ToParentTransform._42, 0.000001f *fTimeElapsed + m_xmf4x4ToParentTransform._43);
+	//m_xmf4x4ToParentTransform = Matrix4x4::Multiply(m_xmf4x4ToParentTransform, mtxTranslation);
+
+	XMStoreFloat4x4(&m_pcbMappedGameObject->m_xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+	//XMStoreFloat4x4(&m_pcbMappedGameObject->m, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+
+	//   D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = m_pd3dcbPlayer->GetGPUVirtualAddress();
+	//   pd3dCommandList->SetGraphicsRootConstantBufferView(ROOT_PARAMETER_OBJECT, d3dGpuVirtualAddress);
+	//if (m_pBackRotorFrame)
+	//{
+	//   XMMATRIX xmmtxRotate = XMMatrixRotationX(XMConvertToRadians(360.0f * 3.0f) * fTimeElapsed);
+	//   m_pBackRotorFrame->m_xmf4x4ToParentTransform = Matrix4x4::Multiply(xmmtxRotate, m_pBackRotorFrame->m_xmf4x4ToParentTransform);
+	//}
+
 }
 
-void UIObject::Render(ID3D12GraphicsCommandList * pd3dCommandList)
-{
-	SetRootParameter(pd3dCommandList);
 
-	pd3dCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pd3dCommandList->DrawInstanced(6, 1, 0, 0);
+
+
+//==========CEffect
+//==============================
+CRainobj::CRainobj(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
+{
+
+	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/box.data");
+	//texture 추가 ===========================================================================05.05
+	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	TCHAR pstrPathName[64] = { '\0' };
+	_tcscat_s(pstrPathName, 128, _T("Assets/Model/rain.dds"));
+	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+
+
+	CMaterial *pMaterial = NULL;
+	pMaterial = new CMaterial();
+	//pMaterial->m_xmf4Albedo = xmf4MaterialAlbedo;
+
+	pMaterial->SetTexture(pTexture);
+
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
+
+	ID3D12Resource *pd3dcbResource = CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CEffectShader *pShader = new CEffectShader();
+	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	pShader->CreateCbvAndSrvDescriptorHeaps(pd3dDevice, pd3dCommandList, 1, 1);
+	pShader->CreateConstantBufferViews(pd3dDevice, pd3dCommandList, 1, pd3dcbResource, ncbElementBytes);
+	pShader->CreateShaderResourceViews(pd3dDevice, pd3dCommandList, pTexture, 5, true);
+
+	SetCbvGPUDescriptorHandle(pShader->GetGPUCbvDescriptorStartHandle());
+
+	pMaterial->SetShader(pShader);
+	if (pMaterial) SetMaterial(pMaterial);
+
+	//
+	float t_x = rand() % 5000;
+	float t_y = rand() % 400 + 100;
+	float t_z = rand() % 5000;
+	SetPosition(t_x, t_y, t_z);
+	//
+	m_speed.x = 0.f;
+	m_speed.y = ((rand() / (float)RAND_MAX) - 1.5f)*10.f;
+	m_speed.z = 0.f;
 }
 
-bool UIObject::CollisionUI(POINT * pPoint, float trueSetData, float falseSetData)
+CRainobj::~CRainobj()
 {
-	if (m_xmf2StartPos.x < pPoint->x && m_xmf2StartPos.y > pPoint->y) {
-		if (m_xmf2EndPos.x > pPoint->x && m_xmf2EndPos.y < pPoint->y) {
-			m_fData = trueSetData;
-			return true;
-		}
+
+}
+
+void CRainobj::Animate(float fTimeElapsed)
+{
+	m_CurrentTime += (fTimeElapsed);
+	XMMATRIX mtxTranslate = ::XMMatrixTranslation(m_speed.x, m_CurrentTime*m_speed.y, m_speed.z);
+	//XMMATRIX mtxRotate = ::XMMatrixRotationY(XMConvertToRadians(360.0f * 0.5f) * fTimeElapsed);
+
+	XMFLOAT3 pos = GetPosition();
+	if (pos.y <= 0) {
+		pos.y = 800;
+		SetPosition(pos);
+		m_CurrentTime = 0.f;
 	}
-	m_fData = falseSetData;
-	return false;
-}
 
-void UIObject::CreateCollisionBox()
+	m_xmf4x4World = Matrix4x4::Multiply(mtxTranslate, m_xmf4x4World);
+	//	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
+
+
+
+	XMStoreFloat4x4(&m_pcbMappedGameObject->m_xmf4x4World, ::XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+
+}
+ID3D12Resource *CRainobj::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
-	m_xmf2StartPos = XMFLOAT2(
-		m_xmf2ScreenPos.x - static_cast<float>(m_nSize.x / 2) * m_xmf2Scale.x,
-		static_cast<float>(FRAME_BUFFER_HEIGHT) - (m_xmf2ScreenPos.y - static_cast<float>(m_nSize.y / 2) * m_xmf2Scale.y)
-	);
-	m_xmf2EndPos = XMFLOAT2(
-		m_xmf2ScreenPos.x + static_cast<float>(m_nSize.x / 2) * m_xmf2Scale.x,
-		static_cast<float>(FRAME_BUFFER_HEIGHT) - (m_xmf2ScreenPos.y + static_cast<float>(m_nSize.y / 2) * m_xmf2Scale.y)
-	);
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255); //256의 배수
+	m_pd3dcbGameObject = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+
+	m_pd3dcbGameObject->Map(0, NULL, (void **)&m_pcbMappedGameObject);
+
+	return(m_pd3dcbGameObject);
 }
 
-void UIObject::SetScreenSize(XMFLOAT2 & size)
+void CRainobj::ReleaseShaderVariables()
 {
-	m_xmf2ScreenSize = size;
+	if (m_pd3dcbGameObject)
+	{
+		m_pd3dcbGameObject->Unmap(0, NULL);
+		m_pd3dcbGameObject->Release();
+	}
+
+	if (m_pMaterial) m_pMaterial->ReleaseShaderVariables();
 }
 
-void UIObject::SetPosition(XMFLOAT2 & pos)
+void CRainobj::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 {
-	m_xmf2ScreenPos = pos;
+	XMStoreFloat4x4(&m_pcbMappedGameObject->m_xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+	if (m_pMaterial) m_pcbMappedGameObject->m_nMaterial = m_pMaterial->m_nReflection;
+	//D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneGpuVirtualAddress = m_pd3dcbParticle->GetGPUVirtualAddress();
+	//pd3dCommandList->SetGraphicsRootConstantBufferView(10, d3dcbBoneGpuVirtualAddress);
 }
 
-void UIObject::SetScale(XMFLOAT2 & scale)
+//////////
+
+CSnowobj::CSnowobj(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
 {
-	m_xmf2Scale = scale;
+
+	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/snow.data");
+	//texture 추가 ===========================================================================05.05
+	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	TCHAR pstrPathName[64] = { '\0' };
+	_tcscat_s(pstrPathName, 128, _T("Assets/Model/snow.dds"));
+	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+
+
+	CMaterial *pMaterial = NULL;
+	pMaterial = new CMaterial();
+	//pMaterial->m_xmf4Albedo = xmf4MaterialAlbedo;
+
+	pMaterial->SetTexture(pTexture);
+
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
+
+	ID3D12Resource *pd3dcbResource = CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CEffectShader *pShader = new CEffectShader();
+	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	pShader->CreateCbvAndSrvDescriptorHeaps(pd3dDevice, pd3dCommandList, 1, 1);
+	pShader->CreateConstantBufferViews(pd3dDevice, pd3dCommandList, 1, pd3dcbResource, ncbElementBytes);
+	pShader->CreateShaderResourceViews(pd3dDevice, pd3dCommandList, pTexture, 5, true);
+
+	SetCbvGPUDescriptorHandle(pShader->GetGPUCbvDescriptorStartHandle());
+
+	pMaterial->SetShader(pShader);
+	if (pMaterial) SetMaterial(pMaterial);
+
+	//
+	float t_x = rand() % 5000;
+	float t_y = rand() % 400 + 100;
+	float t_z = rand() % 5000;
+	SetPosition(t_x, t_y, t_z);
+	//
+	m_speed.x = rand() % 10 + 2;
+	m_speed.y = ((rand() / (float)RAND_MAX) - 1.f)*2.f;
+	m_speed.z = rand() % 10 + 2;
+
+	m_CurrentTime = rand() % 1000 * 0.05f;
 }
 
-void UIObject::SetSize(XMUINT2 & size)
+CSnowobj::~CSnowobj()
 {
-	m_nSize = size;
+
 }
 
-void UIObject::SetNumSprite(XMUINT2 & numSprite, XMUINT2& nowSprite)
+void CSnowobj::Animate(float fTimeElapsed)
 {
-	m_nNumSprite = numSprite;
-	m_nNowSprite = nowSprite;
+	m_CurrentTime += (fTimeElapsed);
+	float offsetX = sin(m_CurrentTime*3.141592*m_speed.x);
+	float offsetZ = cos(m_CurrentTime*3.141592*m_speed.z);
+	XMMATRIX mtxTranslate = ::XMMatrixTranslation(offsetX, m_CurrentTime*m_speed.y, offsetZ);
+	XMMATRIX mtxRotate = ::XMMatrixRotationY(XMConvertToRadians(360.0f * 0.5f)* m_CurrentTime);
+
+	XMFLOAT3 pos = GetPosition();
+	if (pos.y <= 0) {
+		m_CurrentTime = 0.f;
+
+		float t_x = rand() % 5000;
+		float t_y = 800;
+		float t_z = rand() % 5000;
+		SetPosition(t_x, t_y, t_z);
+	}
+
+	m_xmf4x4World = Matrix4x4::Multiply(mtxTranslate, m_xmf4x4World);
+	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
+
+
+
+	XMStoreFloat4x4(&m_pcbMappedGameObject->m_xmf4x4World, ::XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+
 }
-
-///////////////////////////////////////////////////
-
-//
-//void HPBarObject::SetPlayerStatus(Status * pPlayerStatus)
-//{
-//	m_pPlayerStatus = pPlayerStatus;
-//	m_fMaxHP = static_cast<float>(pPlayerStatus->m_health);
-//	m_fLerpHP = m_fMaxHP;
-//}
-
-void HPBarObject::Update(float fTimeElapsed)
+ID3D12Resource *CSnowobj::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
-	float currHP = 100;//m_pPlayerStatus->m_health;
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255); //256의 배수
+	m_pd3dcbGameObject = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
-	m_fLerpHP = currHP + (m_fLerpHP - currHP) * fTimeElapsed;
+	m_pd3dcbGameObject->Map(0, NULL, (void **)&m_pcbMappedGameObject);
 
-	m_fData = currHP / m_fMaxHP;
+	return(m_pd3dcbGameObject);
 }
+
+void CSnowobj::ReleaseShaderVariables()
+{
+	if (m_pd3dcbGameObject)
+	{
+		m_pd3dcbGameObject->Unmap(0, NULL);
+		m_pd3dcbGameObject->Release();
+	}
+
+	if (m_pMaterial) m_pMaterial->ReleaseShaderVariables();
+}
+
+void CSnowobj::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
+{
+	XMStoreFloat4x4(&m_pcbMappedGameObject->m_xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+	if (m_pMaterial) m_pcbMappedGameObject->m_nMaterial = m_pMaterial->m_nReflection;
+	//D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneGpuVirtualAddress = m_pd3dcbParticle->GetGPUVirtualAddress();
+	//pd3dCommandList->SetGraphicsRootConstantBufferView(10, d3dcbBoneGpuVirtualAddress);
+}
+
+
+
+//==============================
+//==============================
+CDamagedParticle::CDamagedParticle(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
+{
+	LoadGeometryFromFBXMesh(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Assets/Model/capsule.data");
+	//texture 추가 ===========================================================================05.05
+	CTexture *pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	TCHAR pstrPathName[64] = { '\0' };
+	_tcscat_s(pstrPathName, 128, _T("Assets/Model/blood.dds"));
+	pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrPathName, 0);
+
+
+	CMaterial *pMaterial = NULL;
+	pMaterial = new CMaterial();
+
+	pMaterial->SetTexture(pTexture);
+
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
+
+	ID3D12Resource *pd3dcbResource = CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CEffectShader *pShader = new CEffectShader();
+	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	pShader->CreateCbvAndSrvDescriptorHeaps(pd3dDevice, pd3dCommandList, 1, 1);
+	pShader->CreateConstantBufferViews(pd3dDevice, pd3dCommandList, 1, pd3dcbResource, ncbElementBytes);
+	pShader->CreateShaderResourceViews(pd3dDevice, pd3dCommandList, pTexture, 5, true);
+
+	SetCbvGPUDescriptorHandle(pShader->GetGPUCbvDescriptorStartHandle());
+
+	pMaterial->SetShader(pShader);
+	if (pMaterial) SetMaterial(pMaterial);
+
+
+	m_Force.x = (rand() % 100 + 5) * (pow(-1, rand() % 2));
+	m_Force.y = rand() % 20+50;
+	m_Force.z = (rand() % 100 + 5) * (pow(-1, rand() % 2));
+}
+CDamagedParticle::~CDamagedParticle()
+{
+}
+
+void CDamagedParticle::Animate(float fTimeElapsed)
+{
+	m_CurrentTime += (fTimeElapsed);
+
+	if (m_CurrentTime >= 3) {
+		SetPosition(2500, -200, 2500);
+		m_Force.y = rand() % 20+50;
+		m_CurrentTime = 0.f;
+	}
+
+
+	m_Force.y -= 0.01f;
+	XMMATRIX mtxTranslate = ::XMMatrixTranslation(m_Force.x*fTimeElapsed, m_Force.y*fTimeElapsed, m_Force.z*fTimeElapsed);
+	m_xmf4x4World = Matrix4x4::Multiply(mtxTranslate, m_xmf4x4World);
+
+	XMStoreFloat4x4(&m_pcbMappedGameObject->m_xmf4x4World, ::XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+
+}
+void CDamagedParticle::SetForce(float x, float y, float z)
+{
+	m_Force.x = x;	m_Force.y = y; m_Force.z = z;
+}
+ID3D12Resource *CDamagedParticle::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
+{
+	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255); //256의 배수
+	m_pd3dcbGameObject = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+
+	m_pd3dcbGameObject->Map(0, NULL, (void **)&m_pcbMappedGameObject);
+
+	return(m_pd3dcbGameObject);
+}
+
+void CDamagedParticle::ReleaseShaderVariables()
+{
+	if (m_pd3dcbGameObject)
+	{
+		m_pd3dcbGameObject->Unmap(0, NULL);
+		m_pd3dcbGameObject->Release();
+	}
+
+	if (m_pMaterial) m_pMaterial->ReleaseShaderVariables();
+}
+
+void CDamagedParticle::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
+{
+	XMStoreFloat4x4(&m_pcbMappedGameObject->m_xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+	if (m_pMaterial) m_pcbMappedGameObject->m_nMaterial = m_pMaterial->m_nReflection;
+}
+

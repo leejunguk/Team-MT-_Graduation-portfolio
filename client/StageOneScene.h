@@ -42,9 +42,6 @@ public:
 
 	virtual CHeightMapTerrain *GetTerrain() { return(m_pTerrain); }
 
-	virtual void BuildUI(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList);
-	virtual void RenderUI(ID3D12Device * pDevice, ID3D12GraphicsCommandList * pCommandList);
-
 
 	bool						isRenderBullet = false;
 	int							BulletCnt = 0;
@@ -77,13 +74,9 @@ protected:
 	CTreeShader	            *m_pTreeShader = NULL;
 	//BulletShader              * m_BulletShader[100];
 
-	UIHPBarShaders			*m_pHIBarShader = NULL;
-
 	CSkyBox						*m_pSkyBox = NULL;
 	CHeightMapTerrain			*m_pTerrain = NULL;
 
 
-	vector<UIShaders*>											m_ppUIShaders;
-	UINT				m_nUIShaders;
 
 };
